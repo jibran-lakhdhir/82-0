@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "82-0",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["app.py"],
+      "port": 8080,
+      "autoPort": true
+    },
+    {
+      "name": "basketball-rebuild",
+      "runtimeExecutable": "/Users/jibran.lakhdhir/Desktop/Basketball Rebuild/venv/bin/python3",
+      "runtimeArgs": ["/Users/jibran.lakhdhir/Desktop/Basketball Rebuild/app.py"],
+      "port": 5050
+    }
+  ]
+}

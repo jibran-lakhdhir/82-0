@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:82-0.com)",
+      "Skill(claude-api)",
+      "Skill(claude-api:*)",
+      "Bash(pip3 show *)",
+      "Bash(pip3 install *)",
+      "Bash(python3 scoring_engine.py)",
+      "Bash(python3 -c \"import sys; print\\(sys.version\\)\")",
+      "Bash(pip3 --version)",
+      "Bash(mkdir -p data/cache domain sim static scripts)",
+      "Bash(python3 -m venv venv)",
+      "Bash(./venv/bin/pip install *)",
+      "Bash(./venv/bin/python3 -c ' *)",
+      "Bash(curl -s \"http://archive.org/wayback/available?url=basketball-reference.com/contracts/players.html&timestamp=20260201\")",
+      "Bash(./venv/bin/python3 -m data.fetch_rosters)",
+      "Bash(./venv/bin/python3 -m data.fetch_player_stats)",
+      "Bash(python3 -c ' *)",
+      "Bash(./venv/bin/python3 -m data.fetch_contracts)",
+      "Bash(./venv/bin/python3 -m data.match_players)",
+      "Read(//private/tmp/**)",
+      "Bash(./venv/bin/python3 -m data.build_cache)",
+      "Bash(./venv/bin/python3 -m scripts.smoke_test_sim GSW)",
+      "Bash(nohup ./venv/bin/python3 app.py)",
+      "Read(//tmp/**)",
+      "Bash(curl -s http://127.0.0.1:5050/api/teams)",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s -X POST http://127.0.0.1:5050/api/new_game -H \"Content-Type: application/json\" -d '{\"team_id\":\"GSW\"}')",
+      "Bash(pkill -f \"app.py\")",
+      "Bash(mkdir -p \"/Users/jibran.lakhdhir/Desktop/Basketball Rebuild/.claude\")",
+      "mcp__Claude_Preview__preview_start",
+      "WebSearch",
+      "WebFetch(domain:ovrbase.com)",
+      "Bash(./venv/bin/python3 -m scripts.calibrate_ratings crawl)",
+      "Bash(./venv/bin/python3 -m scripts.calibrate_ratings analyze)",
+      "Bash(./venv/bin/python3 -m scripts.smoke_test_sim MIA)",
+      "Bash(git -C /Users/jibran.lakhdhir/claudeChatBotTest status)",
+      "Bash(gh auth *)"
+    ]
+  }
+}

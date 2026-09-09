@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>82-0</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #222636;
+      --border: #2e3347;
+      --accent: #f5a623;
+      --accent2: #e07b00;
+      --green: #4ade80;
+      --red: #f87171;
+      --blue: #60a5fa;
+      --purple: #c084fc;
+      --text: #e8eaf0;
+      --muted: #8890a8;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      min-height: 100vh;
+      font-size: 14px;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 28px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .logo { font-size: 22px; font-weight: 800; color: var(--accent); letter-spacing: -0.5px; }
+    .logo span { color: var(--text); }
+    .header-right { display: flex; align-items: center; gap: 14px; }
+    .toggle-wrap { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+    .toggle { position: relative; display: inline-block; width: 38px; height: 20px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0; background: var(--border); border-radius: 20px; cursor: pointer;
+      transition: .2s;
+    }
+    .slider::before {
+      content: ''; position: absolute; width: 14px; height: 14px; background: #fff;
+      border-radius: 50%; left: 3px; top: 3px; transition: .2s;
+    }
+    input:checked + .slider { background: var(--accent); }
+    input:checked + .slider::before { transform: translateX(18px); }
+
+    .btn {
+      padding: 8px 16px; border-radius: var(--radius); border: none;
+      cursor: pointer; font-weight: 600; font-size: 13px; transition: .15s;
+    }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-primary:hover { background: var(--accent2); }
+    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--border); }
+    .btn-sm { padding: 5px 10px; font-size: 11px; }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* ── Main layout ── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 20px;
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 24px;
+    }
+
+    .section-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 1.2px;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 12px;
+    }
+
+    /* ── Completed spins (past picks shown above active spin) ── */
+    .completed-spins { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+
+    .completed-card {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      opacity: 0.85;
+    }
+    .completed-check {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--green); color: #000;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800; flex-shrink: 0;
+    }
+    .completed-info { flex: 1; min-width: 0; }
+    .completed-player { font-weight: 700; font-size: 14px; }
+    .completed-meta { font-size: 12px; color: var(--muted); margin-top: 1px; }
+    .completed-pos {
+      font-size: 11px; font-weight: 700; color: var(--accent);
+      background: rgba(245,166,35,.12); padding: 3px 8px; border-radius: 6px;
+    }
+    .completed-undo {
+      font-size: 11px; color: var(--muted); cursor: pointer; padding: 4px 8px;
+      border-radius: 6px; border: 1px solid var(--border); background: transparent;
+    }
+    .completed-undo:hover { color: var(--red); border-color: var(--red); }
+
+    /* ── Active spin card ── */
+    .active-spin-card {
+      background: var(--surface);
+      border: 2px solid var(--accent);
+      border-radius: var(--radius);
+      overflow: hidden;
+      animation: slideIn .25s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .spin-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 18px;
+      background: var(--surface2);
+    }
+    .spin-header-left { display: flex; align-items: center; gap: 12px; }
+    .spin-num {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--accent); color: #000;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800;
+    }
+    .spin-title { font-weight: 700; font-size: 16px; }
+    .spin-subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .spin-actions { display: flex; gap: 8px; }
+
+    .spin-body { padding: 16px 18px; }
+
+    /* ── Position tabs ── */
+    .pos-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+    .pos-tab {
+      padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); cursor: pointer;
+      font-size: 12px; font-weight: 700; transition: .1s;
+    }
+    .pos-tab.active { background: var(--accent); color: #000; border-color: var(--accent); }
+    .pos-tab:hover:not(.active) { border-color: var(--text); color: var(--text); }
+
+    /* ── Player list ── */
+    .player-list { display: flex; flex-direction: column; gap: 6px; }
+
+    .player-row {
+      display: flex; align-items: center;
+      padding: 11px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      cursor: pointer;
+      transition: .12s;
+      gap: 12px;
+    }
+    .player-row:hover { border-color: var(--accent); background: rgba(245,166,35,.07); }
+
+    .player-name { font-weight: 600; font-size: 13px; }
+    .player-season { font-size: 11px; color: var(--muted); }
+    .stat-block { display: flex; gap: 12px; }
+    .stat-item { text-align: center; min-width: 36px; }
+    .stat-label { font-size: 10px; color: var(--muted); }
+    .stat-val { font-weight: 700; font-size: 13px; color: var(--text); }
+
+    .award-badge {
+      font-size: 10px; font-weight: 700; padding: 2px 7px;
+      border-radius: 10px; white-space: nowrap; flex-shrink: 0;
+    }
+    .award-MVP       { background: rgba(245,166,35,.2); color: var(--accent); }
+    .award-Finals    { background: rgba(192,132,252,.2); color: var(--purple); }
+    .award-1stNBA    { background: rgba(96,165,250,.2);  color: var(--blue); }
+    .award-DPOY      { background: rgba(74,222,128,.2);  color: var(--green); }
+    .award-1stDef    { background: rgba(74,222,128,.15); color: var(--green); }
+    .award-2ndNBA    { background: rgba(96,165,250,.15); color: var(--blue); }
+    .award-AllStar   { background: rgba(245,166,35,.12); color: #c8a96e; }
+
+    .advanced-stats {
+      display: none; padding: 6px 14px 10px;
+      font-size: 11px; color: var(--muted);
+      gap: 16px; flex-wrap: wrap;
+      border-top: 1px solid var(--border);
+    }
+    .advanced-stats.show { display: flex; }
+
+    /* ── Position pick modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.65); z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 24px; width: 320px;
+    }
+    .modal h3 { margin-bottom: 4px; font-size: 16px; }
+    .modal-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+    .modal-pos-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .modal-pos-btn {
+      padding: 12px 6px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface2); color: var(--text);
+      font-weight: 700; font-size: 14px; cursor: pointer; transition: .12s;
+    }
+    .modal-pos-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(245,166,35,.1); }
+    .modal-pos-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .modal-cancel { margin-top: 12px; width: 100%; }
+
+    /* ── Right sidebar ── */
+    .sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px;
+    }
+
+    /* Tokens */
+    .token-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 0;
+    }
+    .token-row + .token-row { border-top: 1px solid var(--border); }
+    .token-label { font-size: 13px; font-weight: 600; }
+    .token-status {
+      font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 8px;
+    }
+    .token-available { background: rgba(74,222,128,.15); color: var(--green); }
+    .token-used { background: rgba(248,113,113,.12); color: var(--red); }
+
+    /* Lineup */
+    .lineup-slot {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 0;
+    }
+    .lineup-slot + .lineup-slot { border-top: 1px solid var(--border); }
+    .pos-tag { width: 32px; font-weight: 700; font-size: 12px; color: var(--accent); flex-shrink: 0; }
+    .lineup-name { font-size: 13px; font-weight: 600; flex: 1; }
+    .lineup-name.empty { color: var(--muted); font-weight: 400; font-style: italic; }
+    .lineup-award { font-size: 10px; }
+
+    .submit-btn {
+      width: 100%; margin-top: 6px;
+      padding: 13px; font-size: 15px; font-weight: 700;
+      background: var(--accent); color: #000; border: none;
+      border-radius: var(--radius); cursor: pointer; transition: .15s;
+    }
+    .submit-btn:hover:not(:disabled) { background: var(--accent2); }
+    .submit-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* Progress dots */
+    .progress-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 4px; }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--border); transition: .2s;
+    }
+    .dot.done { background: var(--green); }
+    .dot.active { background: var(--accent); transform: scale(1.3); }
+
+    /* Result */
+    .result-card {
+      background: var(--surface); border: 2px solid var(--accent);
+      border-radius: var(--radius); padding: 20px; text-align: center;
+    }
+    .result-record {
+      font-size: 56px; font-weight: 900; color: var(--accent);
+      letter-spacing: -2px; line-height: 1;
+    }
+    .result-record span { color: var(--muted); font-size: 36px; font-weight: 400; }
+    .result-subtitle { font-size: 12px; color: var(--muted); margin: 4px 0 16px; }
+    .result-breakdown { text-align: left; font-size: 12px; }
+    .result-row { display: flex; justify-content: space-between; padding: 5px 0; }
+    .result-row + .result-row { border-top: 1px solid var(--border); }
+    .result-label { color: var(--muted); }
+    .result-val { font-weight: 600; }
+
+    /* Loading */
+    .loading-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.7); z-index: 200;
+      align-items: center; justify-content: center; flex-direction: column; gap: 16px;
+    }
+    .loading-overlay.show { display: flex; }
+    .spinner {
+      width: 40px; height: 40px; border: 3px solid var(--border);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: var(--text); font-weight: 600; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: #2d1515; border: 1px solid var(--red); color: var(--red);
+      padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      opacity: 0; transition: opacity .2s; z-index: 300; pointer-events: none;
+      max-width: 400px; text-align: center;
+    }
+    .toast.show { opacity: 1; }
+
+    /* Start screen */
+    #start-screen {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: calc(100vh - 60px); gap: 20px; text-align: center; padding: 24px;
+    }
+    .start-title { font-size: 72px; font-weight: 900; color: var(--accent); letter-spacing: -4px; }
+    .start-sub { font-size: 16px; color: var(--muted); max-width: 440px; line-height: 1.6; }
+    .start-rules {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px; max-width: 460px;
+      text-align: left; font-size: 13px; line-height: 1.9; color: var(--muted);
+    }
+    .start-rules li { margin-left: 16px; }
+    .start-rules strong { color: var(--text); }
+    #start-screen.hidden { display: none; }
+    #game-screen { display: none; }
+    #game-screen.show { display: block; }
+  </style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Loading…</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Position pick modal (new pick + move/swap) -->
+<div class="modal-overlay" id="pos-modal">
+  <div class="modal">
+    <h3 id="modal-title">Choose a position</h3>
+    <div class="modal-sub" id="modal-sub"></div>
+    <div class="modal-pos-grid" id="modal-pos-grid"></div>
+    <button class="btn btn-secondary modal-cancel" onclick="closeModal()">Cancel</button>
+  </div>
+</div>
+
+<header>
+  <div class="logo">82<span>-0</span></div>
+  <div class="header-right">
+    <div class="toggle-wrap">
+      <span>Advanced Stats</span>
+      <label class="toggle">
+        <input type="checkbox" id="adv-toggle" onchange="toggleAdvanced()" />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="newGame()">New Game</button>
+  </div>
+</header>
+
+<!-- Start screen -->
+<div id="start-screen">
+  <div class="start-title">82-0</div>
+  <div class="start-sub">Build the greatest NBA lineup ever assembled. Can you go undefeated?</div>
+  <div class="start-rules">
+    <ul>
+      <li>5 spins — each gives you a <strong>team &amp; era</strong></li>
+      <li>Pick one player per spin, assign them to a position</li>
+      <li>One <strong>team respin</strong> + one <strong>era respin</strong> token per game</li>
+      <li>Players can fill multiple positions based on their style</li>
+      <li>Best single season within that decade is used</li>
+    </ul>
+  </div>
+  <button class="btn btn-primary" style="font-size:16px;padding:14px 40px;" onclick="newGame()">
+    Start Game
+  </button>
+</div>
+
+<!-- Game screen -->
+<div id="game-screen">
+  <main>
+    <!-- Left: active spin + completed history -->
+    <div>
+      <!-- Progress dots -->
+      <div class="progress-dots" id="progress-dots"></div>
+
+      <!-- Completed spins (stacked above) -->
+      <div class="completed-spins" id="completed-spins"></div>
+
+      <!-- Active spin -->
+      <div id="active-spin-container"></div>
+    </div>
+
+    <!-- Right sidebar -->
+    <div class="sidebar">
+      <div class="card">
+        <div class="section-title">Respin Tokens</div>
+        <div class="token-row">
+          <span class="token-label">🔀 Team Respin</span>
+          <span class="token-status" id="token-team">Available</span>
+        </div>
+        <div class="token-row">
+          <span class="token-label">⏳ Era Respin</span>
+          <span class="token-status" id="token-era">Available</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Lineup</div>
+        <div id="lineup-slots"></div>
+        <button class="submit-btn" id="submit-btn" disabled onclick="submitLineup()">
+          Submit Lineup
+        </button>
+      </div>
+
+      <div id="result-container"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+const POSITIONS = ["PG", "SG", "SF", "PF", "C"];
+const AWARD_CLASS = {
+  "MVP": "award-MVP", "Finals MVP": "award-Finals",
+  "1st Team All-NBA": "award-1stNBA", "Defensive Player of the Year": "award-DPOY",
+  "1st Team All-Defense": "award-1stDef", "2nd Team All-NBA": "award-2ndNBA",
+  "All-Star": "award-AllStar",
+};
+
+let SESSION_ID = null;
+let STATE = null;
+let ADVANCED = false;
+let pendingPick = null;   // {spinIndex, playerName, eligible}
+let activePosTab = {};    // {spinIndex: pos}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+async function api(path, method = "GET", body = null) {
+  const opts = { method, headers: { "Content-Type": "application/json" } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(path, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Unknown error");
+  return data;
+}
+function showLoading(msg) { document.getElementById("loading-text").textContent = msg; document.getElementById("loading").classList.add("show"); }
+function hideLoading() { document.getElementById("loading").classList.remove("show"); }
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 3500);
+}
+function closeModal() { document.getElementById("pos-modal").classList.remove("open"); pendingPick = null; }
+function toggleAdvanced() { ADVANCED = document.getElementById("adv-toggle").checked; renderActiveSpin(); }
+
+// ── Active spin index ──────────────────────────────────────────────────────
+function getActiveSpinIndex() {
+  if (!STATE) return 0;
+  const idx = STATE.spins.findIndex(s => !s.is_resolved);
+  return idx === -1 ? STATE.spins.length : idx;
+}
+
+// ── New game ───────────────────────────────────────────────────────────────
+async function newGame() {
+  showLoading("Spinning…");
+  try {
+    const data = await api("/api/new_game", "POST");
+    SESSION_ID = data.session_id;
+    STATE = data.state;
+    activePosTab = {};
+    document.getElementById("start-screen").classList.add("hidden");
+    document.getElementById("game-screen").classList.add("show");
+    render();
+  } catch (e) { showToast(e.message); }
+  finally { hideLoading(); }
+}
+
+// ── Main render ────────────────────────────────────────────────────────────
+function render() {
+  renderTokens();
+  renderProgress();
+  renderCompleted();
+  renderActiveSpin();
+  renderLineup();
+}
+
+function renderTokens() {
+  const t = document.getElementById("token-team");
+  const e = document.getElementById("token-era");
+  t.textContent = STATE.team_respin_available ? "Available" : "Used";
+  t.className = "token-status " + (STATE.team_respin_available ? "token-available" : "token-used");
+  e.textContent = STATE.era_respin_available ? "Available" : "Used";
+  e.className = "token-status " + (STATE.era_respin_available ? "token-available" : "token-used");
+}
+
+function renderProgress() {
+  const container = document.getElementById("progress-dots");
+  container.innerHTML = "";
+  const activeIdx = getActiveSpinIndex();
+  STATE.spins.forEach((s, i) => {
+    const dot = document.createElement("div");
+    dot.className = "dot" + (s.is_resolved ? " done" : i === activeIdx ? " active" : "");
+    container.appendChild(dot);
+  });
+}
+
+// ── Completed spins ────────────────────────────────────────────────────────
+function renderCompleted() {
+  const container = document.getElementById("completed-spins");
+  container.innerHTML = "";
+  for (const spin of STATE.spins) {
+    if (!spin.is_resolved) break;
+    container.appendChild(buildCompletedCard(spin));
+  }
+}
+
+function buildCompletedCard(spin) {
+  const p = spin.selected_player;
+  const award = p.best_award !== "None" ? p.best_award : null;
+  const awardClass = award ? (AWARD_CLASS[award] || "") : "";
+
+  // Positions this player can move to (eligible but may be occupied — swap handles it)
+  const eligible = p.eligible_positions || [];
+
+  const div = document.createElement("div");
+  div.className = "completed-card";
+  div.style.cursor = eligible.length > 1 ? "pointer" : "default";
+  div.innerHTML = `
+    <div class="completed-check">✓</div>
+    <div class="completed-info">
+      <div class="completed-player">
+        ${p.name}
+        ${award ? `<span class="award-badge ${awardClass}" style="margin-left:6px">${award}</span>` : ""}
+      </div>
+      <div class="completed-meta">${spin.team} · ${spin.decade} · ${p.stats.ppg}pts ${p.stats.rpg}reb ${p.stats.apg}ast</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="completed-pos" title="${eligible.length > 1 ? 'Click card to move' : ''}">${spin.assigned_position}${eligible.length > 1 ? ' ✎' : ''}</div>
+      <button class="completed-undo" title="Undo this pick" data-spin="${spin.index}">↩</button>
+    </div>
+  `;
+
+  // Clicking the card (not the undo button) opens the move modal
+  if (eligible.length > 1) {
+    div.onclick = (e) => {
+      if (e.target.closest(".completed-undo")) return;
+      openMoveModal(spin);
+    };
+  }
+  div.querySelector(".completed-undo").onclick = (e) => {
+    e.stopPropagation();
+    undoPick(spin.index);
+  };
+  return div;
+}
+
+function openMoveModal(spin) {
+  const p = spin.selected_player;
+  const eligible = p.eligible_positions || [];
+
+  // Build a map of position → spin currently occupying it
+  const occupiedBy = {};
+  for (const s of STATE.spins) {
+    if (s.index !== spin.index && s.assigned_position) {
+      occupiedBy[s.assigned_position] = s.selected_player?.name;
+    }
+  }
+
+  document.getElementById("modal-title").textContent = p.name;
+  document.getElementById("modal-sub").textContent =
+    `Move to a different position · Currently: ${spin.assigned_position}`;
+
+  const grid = document.getElementById("modal-pos-grid");
+  grid.innerHTML = "";
+
+  POSITIONS.forEach(pos => {
+    const btn = document.createElement("button");
+    btn.className = "modal-pos-btn";
+    btn.disabled = !eligible.includes(pos);
+
+    const occupant = occupiedBy[pos];
+    const isCurrent = pos === spin.assigned_position;
+
+    btn.innerHTML = pos + (occupant && !isCurrent ? `<div style="font-size:9px;font-weight:400;margin-top:2px;color:var(--muted)">↔ ${occupant.split(' ').slice(-1)[0]}</div>` : "");
+    if (isCurrent) {
+      btn.style.borderColor = "var(--accent)";
+      btn.style.color = "var(--accent)";
+    }
+
+    btn.onclick = () => {
+      closeModal();
+      if (!isCurrent) doMovePlayer(spin.index, pos);
+    };
+    grid.appendChild(btn);
+  });
+
+  document.getElementById("pos-modal").classList.add("open");
+}
+
+async function doMovePlayer(spinIndex, newPosition) {
+  showLoading("Moving player…");
+  try {
+    STATE = await api(`/api/move_player/${SESSION_ID}`, "POST", {
+      spin_index: spinIndex, new_position: newPosition,
+    });
+    render();
+  } catch (e) { showToast(e.message); }
+  finally { hideLoading(); }
+}
+
+// ── Active spin ────────────────────────────────────────────────────────────
+function renderActiveSpin() {
+  const container = document.getElementById("active-spin-container");
+  container.innerHTML = "";
+
+  const activeIdx = getActiveSpinIndex();
+  if (activeIdx >= STATE.spins.length) {
+    // All spins resolved — show submit nudge
+    const div = document.createElement("div");
+    div.style.cssText = "text-align:center;padding:32px;color:var(--muted);";
+    div.innerHTML = `<div style="font-size:24px;margin-bottom:8px">🏀</div>
+      <div style="font-weight:700;color:var(--text);margin-bottom:4px">Lineup complete!</div>
+      <div style="font-size:13px">Submit your lineup to see the projected record.</div>`;
+    container.appendChild(div);
+    return;
+  }
+
+  const spin = STATE.spins[activeIdx];
+  const card = document.createElement("div");
+  card.className = "active-spin-card";
+
+  // Header
+  const hdr = document.createElement("div");
+  hdr.className = "spin-header";
+  hdr.innerHTML = `
+    <div class="spin-header-left">
+      <div class="spin-num">${spin.index + 1}</div>
+      <div>
+        <div class="spin-title">${spin.team}</div>
+        <div class="spin-subtitle">${spin.decade}</div>
+      </div>
+    </div>
+    <div class="spin-actions" id="spin-actions"></div>
+  `;
+
+  const actionsEl = hdr.querySelector("#spin-actions");
+  if (STATE.team_respin_available) {
+    const b = document.createElement("button");
+    b.className = "btn btn-secondary btn-sm";
+    b.textContent = "↺ Team";
+    b.title = "Re-roll team, keep era";
+    b.onclick = () => doRespin("team", spin.index);
+    actionsEl.appendChild(b);
+  }
+  if (STATE.era_respin_available) {
+    const b = document.createElement("button");
+    b.className = "btn btn-secondary btn-sm";
+    b.textContent = "↺ Era";
+    b.title = "Re-roll era, keep team";
+    b.onclick = () => doRespin("era", spin.index);
+    actionsEl.appendChild(b);
+  }
+
+  card.appendChild(hdr);
+
+  // Body
+  const body = document.createElement("div");
+  body.className = "spin-body";
+
+  const positions = Object.keys(spin.players).filter(p => spin.players[p].length > 0);
+
+  if (!positions.length) {
+    body.innerHTML = `<div style="color:var(--muted);padding:12px">No players found for this team/era.</div>`;
+    card.appendChild(body);
+    container.appendChild(card);
+    return;
+  }
+
+  // Tabs
+  if (!activePosTab[spin.index]) activePosTab[spin.index] = positions[0];
+  const tabs = document.createElement("div");
+  tabs.className = "pos-tabs";
+  const listEl = document.createElement("div");
+  listEl.className = "player-list";
+
+  positions.forEach(pos => {
+    const tab = document.createElement("button");
+    tab.className = "pos-tab" + (pos === activePosTab[spin.index] ? " active" : "");
+    tab.textContent = pos;
+    tab.onclick = () => {
+      activePosTab[spin.index] = pos;
+      tabs.querySelectorAll(".pos-tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      buildPlayerList(spin, pos, listEl);
+    };
+    tabs.appendChild(tab);
+  });
+
+  buildPlayerList(spin, activePosTab[spin.index], listEl);
+
+  body.appendChild(tabs);
+  body.appendChild(listEl);
+  card.appendChild(body);
+  container.appendChild(card);
+}
+
+function buildPlayerList(spin, pos, container) {
+  container.innerHTML = "";
+  const opts = spin.players[pos] || [];
+  if (!opts.length) {
+    container.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:8px">No players for this position.</div>`;
+    return;
+  }
+
+  // Which positions are already taken by other spins
+  const taken = new Set(STATE.spins
+    .filter(s => s.index !== spin.index && s.assigned_position)
+    .map(s => s.assigned_position));
+
+  for (const opt of opts) {
+    const award = opt.best_award !== "None" ? opt.best_award : null;
+    const awardClass = award ? (AWARD_CLASS[award] || "") : "";
+
+    const row = document.createElement("div");
+    row.className = "player-row";
+
+    row.innerHTML = `
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span class="player-name">${opt.name}</span>
+          ${award ? `<span class="award-badge ${awardClass}">${award}</span>` : ""}
+        </div>
+        <div class="player-season">${opt.season ? opt.season + " season" : ""} · Eligible: ${opt.eligible_positions.join(", ")}</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-item"><div class="stat-label">PTS</div><div class="stat-val">${opt.stats.ppg.toFixed(1)}</div></div>
+        <div class="stat-item"><div class="stat-label">REB</div><div class="stat-val">${opt.stats.rpg.toFixed(1)}</div></div>
+        <div class="stat-item"><div class="stat-label">AST</div><div class="stat-val">${opt.stats.apg.toFixed(1)}</div></div>
+        <div class="stat-item"><div class="stat-label">STL</div><div class="stat-val">${opt.stats.spg.toFixed(1)}</div></div>
+        <div class="stat-item"><div class="stat-label">BLK</div><div class="stat-val">${opt.stats.bpg.toFixed(1)}</div></div>
+      </div>
+    `;
+
+    if (ADVANCED && opt.advanced) {
+      const adv = document.createElement("div");
+      adv.className = "advanced-stats show";
+      adv.innerHTML = `
+        <span>TS% <strong>${opt.advanced.ts_pct ? (opt.advanced.ts_pct*100).toFixed(1)+"%" : "—"}</strong></span>
+        <span>WS/48 <strong>${opt.advanced.ws_per_48 ? opt.advanced.ws_per_48.toFixed(3) : "—"}</strong></span>
+        <span>USG% <strong>${opt.advanced.usg_pct ? opt.advanced.usg_pct.toFixed(1)+"%" : "—"}</strong></span>
+        <span>AST% <strong>${opt.advanced.ast_pct ? opt.advanced.ast_pct.toFixed(1)+"%" : "—"}</strong></span>
+      `;
+      row.appendChild(adv);
+    }
+
+    row.onclick = () => pickPlayer(spin.index, opt, taken);
+    container.appendChild(row);
+  }
+}
+
+// ── Pick player ────────────────────────────────────────────────────────────
+function pickPlayer(spinIndex, opt, taken) {
+  const available = opt.eligible_positions.filter(p => !taken.has(p));
+  if (!available.length) {
+    showToast(`No open positions for ${opt.name}. Undo a previous pick to free up a slot.`);
+    return;
+  }
+  if (available.length === 1) {
+    doSelectPlayer(spinIndex, opt.name, available[0]);
+    return;
+  }
+  // Show modal
+  pendingPick = { spinIndex, playerName: opt.name };
+  document.getElementById("modal-title").textContent = opt.name;
+  document.getElementById("modal-sub").textContent = `Choose a position · Eligible: ${opt.eligible_positions.join(", ")}`;
+  const grid = document.getElementById("modal-pos-grid");
+  grid.innerHTML = "";
+  POSITIONS.forEach(pos => {
+    const btn = document.createElement("button");
+    btn.className = "modal-pos-btn";
+    btn.textContent = pos;
+    btn.disabled = !available.includes(pos);
+    btn.onclick = () => { closeModal(); doSelectPlayer(spinIndex, opt.name, pos); };
+    grid.appendChild(btn);
+  });
+  document.getElementById("pos-modal").classList.add("open");
+}
+
+async function doSelectPlayer(spinIndex, playerName, position) {
+  showLoading("Adding to lineup…");
+  try {
+    STATE = await api(`/api/select_player/${SESSION_ID}`, "POST", {
+      spin_index: spinIndex, player_name: playerName, position,
+    });
+    render();
+  } catch (e) { showToast(e.message); }
+  finally { hideLoading(); }
+}
+
+async function undoPick(spinIndex) {
+  showLoading("Undoing…");
+  try {
+    STATE = await api(`/api/clear_selection/${SESSION_ID}`, "POST", { spin_index: spinIndex });
+    // Also clear any spins after this one that are resolved
+    // (they may have conflicting positions now)
+    render();
+  } catch (e) { showToast(e.message); }
+  finally { hideLoading(); }
+}
+
+// ── Respin ─────────────────────────────────────────────────────────────────
+async function doRespin(type, spinIndex) {
+  showLoading(type === "team" ? "Re-rolling team…" : "Re-rolling era…");
+  try {
+    const endpoint = type === "team" ? "respin_team" : "respin_era";
+    STATE = await api(`/api/${endpoint}/${SESSION_ID}`, "POST", { spin_index: spinIndex });
+    activePosTab[spinIndex] = null;
+    render();
+  } catch (e) { showToast(e.message); }
+  finally { hideLoading(); }
+}
+
+// ── Lineup sidebar ─────────────────────────────────────────────────────────
+function renderLineup() {
+  const container = document.getElementById("lineup-slots");
+  container.innerHTML = "";
+  const assignments = {};
+  for (const spin of STATE.spins) {
+    if (spin.assigned_position) assignments[spin.assigned_position] = spin;
+  }
+  POSITIONS.forEach(pos => {
+    const spin = assignments[pos];
+    const row = document.createElement("div");
+    row.className = "lineup-slot";
+    const p = spin?.selected_player;
+    row.innerHTML = `
+      <div class="pos-tag">${pos}</div>
+      <div class="lineup-name${spin ? "" : " empty"}">${p ? p.name : "—"}</div>
+      ${p?.best_award && p.best_award !== "None"
+        ? `<span class="award-badge ${AWARD_CLASS[p.best_award] || ""} lineup-award">${p.best_award}</span>`
+        : ""}
+    `;
+    container.appendChild(row);
+  });
+
+  const allResolved = STATE.all_spins_resolved && !STATE.result;
+  document.getElementById("submit-btn").disabled = !allResolved;
+
+  if (STATE.result) renderResult();
+}
+
+// ── Submit ─────────────────────────────────────────────────────────────────
+async function submitLineup() {
+  showLoading("Calculating record…");
+  try {
+    STATE = await api(`/api/submit/${SESSION_ID}`, "POST");
+    renderLineup();
+    renderResult();
+  } catch (e) { showToast(e.message); }
+  finally { hideLoading(); }
+}
+
+function renderResult() {
+  const container = document.getElementById("result-container");
+  if (!STATE.result) { container.innerHTML = ""; return; }
+  const r = STATE.result;
+  const wins = Math.round(r.predicted_wins ?? r.wins ?? 0);
+  const losses = 82 - wins;
+
+  container.innerHTML = `
+    <div class="result-card">
+      <div class="result-record">${wins}<span>-${losses}</span></div>
+      <div class="result-subtitle">Projected season record</div>
+      <div class="result-breakdown">
+        <div class="result-row">
+          <span class="result-label">Raw Strength</span>
+          <span class="result-val">${r.raw_strength?.toFixed(1) ?? "—"}</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Balance</span>
+          <span class="result-val">${r.balance_multiplier ? (r.balance_multiplier*100).toFixed(0)+"%" : "—"}</span>
+        </div>
+        ${(r.player_contributions || []).map(p => `
+          <div class="result-row">
+            <span class="result-label">${p.name} <span style="color:var(--accent);font-size:10px">${p.position}</span></span>
+            <span class="result-val">${p.contribution?.toFixed(1) ?? "—"}
+              ${p.award_multiplier > 1 ? `<span style="color:var(--accent);font-size:10px"> ×${p.award_multiplier}</span>` : ""}
+            </span>
+          </div>
+        `).join("")}
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:16px;font-size:14px" onclick="newGame()">
+        Play Again
+      </button>
+    </div>
+  `;
+}
+</script>
+</body>
+</html>

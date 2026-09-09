@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>NBA Rosters 2024-25</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f5f7;color:#111;min-height:100vh}
+  .header{text-align:center;padding:32px 16px 16px;background:linear-gradient(180deg,#e8e8ed 0%,transparent 100%)}
+  .header h1{font-size:13px;letter-spacing:3px;text-transform:uppercase;color:#666;margin-bottom:8px}
+  .season{font-size:11px;color:#999;margin-top:4px;letter-spacing:1px}
+  .nav{display:flex;align-items:center;justify-content:center;gap:24px;padding:16px}
+  .arrow{width:48px;height:48px;border-radius:50%;border:2px solid #ddd;background:#fff;color:#333;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;box-shadow:0 2px 6px rgba(0,0,0,0.08)}
+  .arrow:hover{border-color:#c9a84c;color:#c9a84c;background:#fffbf0}
+  .team-card{max-width:860px;margin:0 auto;padding:0 16px 48px}
+  .team-header{border-radius:16px 16px 0 0;padding:28px 32px 24px;display:flex;align-items:center;gap:20px;position:relative;overflow:hidden}
+  .team-header::before{content:'';position:absolute;inset:0;opacity:.08;background:radial-gradient(ellipse at top right,#fff,transparent)}
+  .team-logo{font-size:52px;line-height:1}
+  .team-info{flex:1}
+  .team-city{font-size:13px;letter-spacing:2px;text-transform:uppercase;opacity:.7;margin-bottom:4px}
+  .team-name{font-size:30px;font-weight:800;letter-spacing:-0.5px}
+  .team-conf{font-size:11px;letter-spacing:1px;text-transform:uppercase;opacity:.5;margin-top:4px}
+  .team-count{font-size:13px;opacity:.6;margin-left:auto;text-align:right}
+  .roster-table{width:100%;border-collapse:collapse;background:#fff;border-radius:0 0 16px 16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08)}
+  .roster-table thead tr{background:#f0f0f5}
+  .roster-table th{padding:11px 14px;text-align:left;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#999;font-weight:600;border-bottom:1px solid #e5e5ea}
+  .roster-table th.num{text-align:center;width:40px}
+  .roster-table th.stat{text-align:center}
+  .roster-table td{padding:13px 14px;font-size:14px;border-bottom:1px solid #f0f0f5;vertical-align:middle}
+  .roster-table tr:last-child td{border-bottom:none}
+  .roster-table tr:hover td{background:#fafafa}
+  .player-name{font-weight:600;color:#111}
+  .player-pos{display:inline-block;font-size:10px;color:#888;background:#f0f0f5;border-radius:4px;padding:2px 6px;margin-left:8px;font-weight:500;letter-spacing:.5px}
+  td.stat{text-align:center;font-size:13px;color:#444;font-variant-numeric:tabular-nums}
+  td.salary{font-size:13px;color:#2a9d4e}
+  td.years{text-align:center;font-size:13px}
+  td.age{text-align:center;font-size:13px;color:#666}
+  .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#c9a84c;margin-right:3px;vertical-align:middle}
+  .years-dots{display:flex;gap:3px;justify-content:center}
+  .year-pip{width:8px;height:8px;border-radius:50%;background:#ddd}
+  .year-pip.filled{background:#c9a84c}
+  .pager{text-align:center;margin-top:14px;font-size:13px;color:#999;letter-spacing:.5px}
+  .highlight{color:#c9a84c}
+  @media(max-width:600px){
+    .roster-table th,.roster-table td{padding:10px 8px;font-size:12px}
+    .team-name{font-size:22px}
+    .team-logo{font-size:36px}
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>NBA Rosters</h1>
+  <div class="season">2024 – 25 Season</div>
+</div>
+
+<div class="nav">
+  <button class="arrow" id="prev">&#8592;</button>
+  <div class="pager"><span id="pager-text"></span></div>
+  <button class="arrow" id="next">&#8594;</button>
+</div>
+
+<div class="team-card">
+  <div class="team-header" id="team-header">
+    <div class="team-logo" id="team-logo"></div>
+    <div class="team-info">
+      <div class="team-city" id="team-city"></div>
+      <div class="team-name" id="team-name"></div>
+      <div class="team-conf" id="team-conf"></div>
+    </div>
+    <div class="team-count" id="team-count"></div>
+  </div>
+  <table class="roster-table">
+    <thead>
+      <tr>
+        <th>Player</th>
+        <th class="stat">Age</th>
+        <th class="stat">Salary</th>
+        <th class="stat">Yrs Left</th>
+        <th class="stat">PTS</th>
+        <th class="stat">REB</th>
+        <th class="stat">AST</th>
+        <th class="stat">STL</th>
+        <th class="stat">BLK</th>
+      </tr>
+    </thead>
+    <tbody id="roster-body"></tbody>
+  </table>
+</div>
+
+<script>
+const teams = [
+  {
+    city:"Atlanta", name:"Hawks", conf:"Southeast · Eastern Conference", color:"#C8102E", emoji:"🦅",
+    roster:[
+      {name:"Trae Young",       pos:"PG", age:26, sal:"$43.0M", yrs:2, pts:25.7,reb:3.3,ast:10.8,stl:1.3,blk:0.2},
+      {name:"Dejounte Murray",  pos:"SG", age:27, sal:"$21.0M", yrs:2, pts:21.9,reb:5.3,ast:6.1,stl:1.5,blk:0.6},
+      {name:"Jalen Johnson",    pos:"SF", age:23, sal:"$14.0M", yrs:4, pts:17.2,reb:8.5,ast:4.2,stl:1.3,blk:0.7},
+      {name:"De'Andre Hunter",  pos:"SF", age:26, sal:"$21.0M", yrs:2, pts:16.1,reb:4.0,ast:2.1,stl:1.1,blk:0.5},
+      {name:"Clint Capela",     pos:"C",  age:30, sal:"$16.0M", yrs:1, pts: 9.4,reb:10.5,ast:0.9,stl:0.8,blk:1.4},
+      {name:"Dyson Daniels",    pos:"SG", age:21, sal:"$ 5.9M", yrs:1, pts: 9.8,reb:4.3,ast:3.2,stl:2.1,blk:0.3},
+      {name:"Bogdan Bogdanovic",pos:"SG", age:32, sal:"$18.0M", yrs:1, pts:11.2,reb:3.0,ast:2.4,stl:0.9,blk:0.2},
+      {name:"Onyeka Okongwu",   pos:"C",  age:24, sal:"$13.0M", yrs:3, pts: 8.7,reb:7.0,ast:1.8,stl:0.9,blk:1.3},
+      {name:"Larry Nance Jr.",  pos:"PF", age:32, sal:"$ 9.0M", yrs:1, pts: 6.4,reb:5.8,ast:2.3,stl:1.0,blk:0.6},
+      {name:"Garrison Mathews", pos:"SF", age:28, sal:"$ 2.2M", yrs:1, pts: 5.1,reb:1.5,ast:0.6,stl:0.4,blk:0.1},
+    ]
+  },
+  {
+    city:"Boston", name:"Celtics", conf:"Atlantic · Eastern Conference", color:"#007A33", emoji:"☘️",
+    roster:[
+      {name:"Jayson Tatum",     pos:"SF", age:26, sal:"$34.0M", yrs:4, pts:26.9,reb:8.1,ast:4.9,stl:1.0,blk:0.6},
+      {name:"Jaylen Brown",     pos:"SG", age:27, sal:"$49.0M", yrs:4, pts:23.0,reb:5.5,ast:3.6,stl:1.1,blk:0.5},
+      {name:"Kristaps Porzingis",pos:"C", age:29, sal:"$30.0M", yrs:2, pts:20.1,reb:7.2,ast:2.0,stl:0.8,blk:2.0},
+      {name:"Jrue Holiday",     pos:"PG", age:34, sal:"$37.0M", yrs:2, pts:12.5,reb:5.4,ast:4.8,stl:1.6,blk:0.7},
+      {name:"Al Horford",       pos:"C",  age:38, sal:"$26.5M", yrs:1, pts: 8.6,reb:6.4,ast:2.8,stl:0.7,blk:1.2},
+      {name:"Derrick White",    pos:"SG", age:30, sal:"$22.6M", yrs:3, pts:15.2,reb:4.3,ast:5.2,stl:1.0,blk:1.2},
+      {name:"Payton Pritchard", pos:"PG", age:27, sal:"$12.0M", yrs:3, pts:13.3,reb:3.2,ast:3.6,stl:0.9,blk:0.2},
+      {name:"Sam Hauser",       pos:"SF", age:26, sal:"$14.0M", yrs:3, pts:12.0,reb:3.7,ast:1.5,stl:0.5,blk:0.2},
+      {name:"Xavier Tillman",   pos:"PF", age:25, sal:"$ 3.3M", yrs:1, pts: 4.0,reb:4.5,ast:1.1,stl:0.6,blk:0.6},
+      {name:"Luke Kornet",      pos:"C",  age:29, sal:"$ 3.8M", yrs:1, pts: 5.8,reb:3.9,ast:0.9,stl:0.4,blk:1.5},
+    ]
+  },
+  {
+    city:"Brooklyn", name:"Nets", conf:"Atlantic · Eastern Conference", color:"#000000", emoji:"🏙️",
+    roster:[
+      {name:"Cam Thomas",       pos:"SG", age:23, sal:"$10.0M", yrs:3, pts:23.0,reb:4.4,ast:3.6,stl:0.8,blk:0.4},
+      {name:"Nic Claxton",      pos:"C",  age:25, sal:"$23.0M", yrs:3, pts:12.4,reb:8.7,ast:2.3,stl:1.0,blk:2.1},
+      {name:"Dennis Schroder",  pos:"PG", age:31, sal:"$13.0M", yrs:1, pts:13.5,reb:3.0,ast:6.0,stl:1.1,blk:0.2},
+      {name:"Dorian Finney-Smith",pos:"SF",age:31, sal:"$14.0M", yrs:2, pts: 9.8,reb:4.4,ast:2.0,stl:1.2,blk:0.3},
+      {name:"Trendon Watford",  pos:"PF", age:24, sal:"$ 2.5M", yrs:1, pts: 8.4,reb:5.1,ast:2.6,stl:0.9,blk:0.4},
+      {name:"Noah Clowney",     pos:"PF", age:21, sal:"$ 3.8M", yrs:3, pts: 8.0,reb:4.5,ast:0.9,stl:0.7,blk:0.7},
+      {name:"Day'Ron Sharpe",   pos:"C",  age:23, sal:"$ 3.8M", yrs:2, pts: 7.2,reb:6.5,ast:1.1,stl:0.5,blk:0.7},
+      {name:"Ben Simmons",      pos:"PG", age:28, sal:"$37.9M", yrs:1, pts: 5.1,reb:5.7,ast:4.6,stl:1.3,blk:0.8},
+      {name:"Shake Milton",     pos:"SG", age:28, sal:"$ 4.5M", yrs:1, pts: 8.5,reb:2.2,ast:2.8,stl:0.6,blk:0.2},
+      {name:"Dariq Whitehead",  pos:"SG", age:20, sal:"$ 3.9M", yrs:2, pts: 7.0,reb:2.0,ast:1.5,stl:0.7,blk:0.2},
+    ]
+  },
+  {
+    city:"Charlotte", name:"Hornets", conf:"Southeast · Eastern Conference", color:"#1D1160", emoji:"🐝",
+    roster:[
+      {name:"LaMelo Ball",      pos:"PG", age:23, sal:"$32.6M", yrs:3, pts:23.7,reb:6.2,ast:8.0,stl:1.6,blk:0.3},
+      {name:"Brandon Miller",   pos:"SF", age:22, sal:"$ 9.8M", yrs:3, pts:17.3,reb:4.2,ast:2.1,stl:1.0,blk:0.6},
+      {name:"Miles Bridges",    pos:"SF", age:26, sal:"$14.0M", yrs:2, pts:18.1,reb:6.8,ast:2.8,stl:1.1,blk:0.5},
+      {name:"Mark Williams",    pos:"C",  age:23, sal:"$ 4.5M", yrs:2, pts:11.0,reb:9.0,ast:1.2,stl:0.5,blk:1.8},
+      {name:"Grant Williams",   pos:"PF", age:25, sal:"$14.0M", yrs:2, pts: 9.4,reb:4.6,ast:2.0,stl:0.9,blk:0.5},
+      {name:"Tre Mann",         pos:"SG", age:24, sal:"$ 3.5M", yrs:2, pts:11.2,reb:2.6,ast:2.9,stl:0.7,blk:0.2},
+      {name:"Nick Richards",    pos:"C",  age:26, sal:"$ 9.0M", yrs:2, pts: 7.4,reb:6.8,ast:0.7,stl:0.5,blk:1.1},
+      {name:"Josh Green",       pos:"SG", age:24, sal:"$10.0M", yrs:3, pts:11.0,reb:3.8,ast:2.5,stl:1.1,blk:0.3},
+      {name:"Tidjane Salaun",   pos:"SF", age:19, sal:"$ 4.9M", yrs:3, pts: 4.5,reb:2.2,ast:0.8,stl:0.5,blk:0.3},
+      {name:"Cody Martin",      pos:"SG", age:29, sal:"$ 7.4M", yrs:1, pts: 5.0,reb:3.5,ast:2.1,stl:0.9,blk:0.3},
+    ]
+  },
+  {
+    city:"Chicago", name:"Bulls", conf:"Central · Eastern Conference", color:"#CE1141", emoji:"🐂",
+    roster:[
+      {name:"Zach LaVine",      pos:"SG", age:29, sal:"$43.9M", yrs:2, pts:19.5,reb:4.5,ast:4.2,stl:0.9,blk:0.4},
+      {name:"Nikola Vucevic",   pos:"C",  age:34, sal:"$22.0M", yrs:1, pts:17.2,reb:10.8,ast:3.3,stl:0.8,blk:0.9},
+      {name:"DeMar DeRozan",    pos:"SF", age:35, sal:"$28.6M", yrs:1, pts:24.0,reb:4.4,ast:5.4,stl:1.0,blk:0.3},
+      {name:"Coby White",       pos:"PG", age:24, sal:"$ 9.5M", yrs:3, pts:19.1,reb:3.9,ast:5.1,stl:1.0,blk:0.3},
+      {name:"Josh Giddey",      pos:"PG", age:22, sal:"$13.0M", yrs:3, pts:14.0,reb:6.9,ast:6.2,stl:1.0,blk:0.3},
+      {name:"Patrick Williams", pos:"PF", age:23, sal:"$22.0M", yrs:2, pts:11.6,reb:4.3,ast:2.0,stl:1.2,blk:0.7},
+      {name:"Ayo Dosunmu",      pos:"SG", age:25, sal:"$ 7.9M", yrs:2, pts:11.3,reb:4.0,ast:4.0,stl:1.0,blk:0.4},
+      {name:"Matas Buzelis",    pos:"PF", age:21, sal:"$ 4.4M", yrs:3, pts: 8.0,reb:4.0,ast:1.5,stl:0.7,blk:0.5},
+      {name:"Torrey Craig",     pos:"SF", age:34, sal:"$ 3.0M", yrs:1, pts: 5.2,reb:3.7,ast:0.9,stl:0.8,blk:0.4},
+      {name:"Julian Phillips",  pos:"SF", age:21, sal:"$ 2.2M", yrs:2, pts: 5.0,reb:2.8,ast:0.8,stl:0.5,blk:0.3},
+    ]
+  },
+  {
+    city:"Cleveland", name:"Cavaliers", conf:"Central · Eastern Conference", color:"#860038", emoji:"⚔️",
+    roster:[
+      {name:"Donovan Mitchell", pos:"SG", age:28, sal:"$35.9M", yrs:3, pts:26.0,reb:5.0,ast:6.1,stl:1.6,blk:0.5},
+      {name:"Darius Garland",   pos:"PG", age:24, sal:"$36.0M", yrs:3, pts:20.6,reb:2.6,ast:6.7,stl:1.3,blk:0.2},
+      {name:"Evan Mobley",      pos:"C",  age:23, sal:"$24.0M", yrs:4, pts:18.3,reb:9.4,ast:2.8,stl:1.3,blk:1.7},
+      {name:"Jarrett Allen",    pos:"C",  age:26, sal:"$20.0M", yrs:2, pts:13.3,reb:9.8,ast:2.3,stl:0.7,blk:1.3},
+      {name:"Max Strus",        pos:"SG", age:28, sal:"$13.0M", yrs:2, pts:12.3,reb:4.4,ast:2.4,stl:0.8,blk:0.2},
+      {name:"Georges Niang",    pos:"PF", age:31, sal:"$ 9.0M", yrs:1, pts: 7.0,reb:3.4,ast:1.7,stl:0.5,blk:0.1},
+      {name:"Ty Jerome",        pos:"PG", age:26, sal:"$ 4.5M", yrs:1, pts:14.0,reb:2.5,ast:3.7,stl:0.7,blk:0.2},
+      {name:"Sam Merrill",      pos:"SG", age:28, sal:"$ 6.0M", yrs:2, pts: 7.8,reb:1.8,ast:1.0,stl:0.5,blk:0.1},
+      {name:"Caris LeVert",     pos:"SG", age:30, sal:"$ 8.0M", yrs:1, pts: 8.5,reb:2.7,ast:3.4,stl:0.8,blk:0.3},
+      {name:"Dean Wade",        pos:"PF", age:28, sal:"$ 4.0M", yrs:1, pts: 5.4,reb:3.5,ast:1.3,stl:0.7,blk:0.3},
+    ]
+  },
+  {
+    city:"Dallas", name:"Mavericks", conf:"Southwest · Western Conference", color:"#00538C", emoji:"🤠",
+    roster:[
+      {name:"Luka Doncic",      pos:"PG", age:25, sal:"$46.0M", yrs:4, pts:28.7,reb:8.6,ast:8.0,stl:1.4,blk:0.5},
+      {name:"Kyrie Irving",     pos:"PG", age:32, sal:"$46.0M", yrs:2, pts:25.3,reb:5.0,ast:5.2,stl:1.3,blk:0.5},
+      {name:"PJ Washington",    pos:"PF", age:26, sal:"$15.0M", yrs:3, pts:14.4,reb:6.1,ast:2.3,stl:1.1,blk:0.8},
+      {name:"Daniel Gafford",   pos:"C",  age:26, sal:"$13.5M", yrs:4, pts:12.7,reb:7.2,ast:1.5,stl:0.9,blk:2.4},
+      {name:"Klay Thompson",    pos:"SG", age:34, sal:"$43.2M", yrs:1, pts:13.7,reb:3.2,ast:2.0,stl:0.9,blk:0.5},
+      {name:"Naji Marshall",    pos:"SF", age:26, sal:"$ 8.5M", yrs:2, pts: 8.5,reb:3.8,ast:2.7,stl:0.9,blk:0.4},
+      {name:"Dante Exum",       pos:"PG", age:29, sal:"$ 4.5M", yrs:1, pts: 6.6,reb:2.1,ast:2.5,stl:0.8,blk:0.3},
+      {name:"Maxi Kleber",      pos:"PF", age:32, sal:"$ 9.2M", yrs:1, pts: 5.4,reb:4.2,ast:1.0,stl:0.4,blk:0.6},
+      {name:"Quentin Grimes",   pos:"SG", age:24, sal:"$ 6.0M", yrs:2, pts: 8.0,reb:2.8,ast:1.6,stl:0.8,blk:0.3},
+      {name:"Dwight Powell",    pos:"C",  age:33, sal:"$ 6.0M", yrs:1, pts: 4.8,reb:3.4,ast:1.1,stl:0.4,blk:0.4},
+    ]
+  },
+  {
+    city:"Denver", name:"Nuggets", conf:"Northwest · Western Conference", color:"#0E2240", emoji:"⛰️",
+    roster:[
+      {name:"Nikola Jokic",     pos:"C",  age:29, sal:"$51.4M", yrs:3, pts:26.4,reb:12.4,ast:9.0,stl:1.4,blk:0.9},
+      {name:"Jamal Murray",     pos:"PG", age:27, sal:"$33.6M", yrs:2, pts:21.2,reb:4.4,ast:6.5,stl:1.2,blk:0.3},
+      {name:"Michael Porter Jr.",pos:"SF",age:26, sal:"$33.5M", yrs:3, pts:17.0,reb:6.1,ast:1.8,stl:0.7,blk:0.5},
+      {name:"Aaron Gordon",     pos:"PF", age:29, sal:"$21.6M", yrs:2, pts:14.4,reb:6.5,ast:3.5,stl:1.0,blk:0.7},
+      {name:"Kentavious Caldwell-Pope",pos:"SG",age:31,sal:"$22.5M",yrs:1,pts:10.2,reb:2.7,ast:1.8,stl:1.1,blk:0.2},
+      {name:"Reggie Jackson",   pos:"PG", age:34, sal:"$ 3.5M", yrs:1, pts: 7.5,reb:2.2,ast:4.5,stl:0.7,blk:0.2},
+      {name:"Julian Strawther", pos:"SG", age:23, sal:"$ 2.3M", yrs:2, pts: 8.0,reb:2.5,ast:1.4,stl:0.6,blk:0.2},
+      {name:"Peyton Watson",    pos:"SF", age:22, sal:"$ 3.2M", yrs:2, pts: 6.0,reb:3.2,ast:1.0,stl:0.8,blk:0.5},
+      {name:"DeAndre Jordan",   pos:"C",  age:36, sal:"$ 3.0M", yrs:1, pts: 3.0,reb:4.5,ast:0.8,stl:0.3,blk:0.5},
+      {name:"Braxton Key",      pos:"SF", age:27, sal:"$ 2.5M", yrs:1, pts: 4.2,reb:3.5,ast:0.8,stl:0.6,blk:0.3},
+    ]
+  },
+  {
+    city:"Detroit", name:"Pistons", conf:"Central · Eastern Conference", color:"#C8102E", emoji:"⚙️",
+    roster:[
+      {name:"Cade Cunningham",  pos:"PG", age:23, sal:"$40.0M", yrs:4, pts:22.7,reb:4.4,ast:7.8,stl:1.1,blk:0.4},
+      {name:"Jalen Duren",      pos:"C",  age:21, sal:"$12.5M", yrs:3, pts:13.0,reb:12.5,ast:2.1,stl:0.9,blk:1.4},
+      {name:"Ausar Thompson",   pos:"SF", age:22, sal:"$ 8.7M", yrs:2, pts:12.0,reb:7.0,ast:3.0,stl:2.0,blk:0.8},
+      {name:"Killian Hayes",    pos:"PG", age:23, sal:"$ 7.5M", yrs:1, pts: 7.0,reb:3.0,ast:4.5,stl:0.8,blk:0.3},
+      {name:"Alec Burks",       pos:"SG", age:33, sal:"$ 7.0M", yrs:1, pts: 9.5,reb:3.5,ast:2.8,stl:0.7,blk:0.2},
+      {name:"Malik Beasley",    pos:"SG", age:28, sal:"$15.0M", yrs:1, pts:14.9,reb:3.5,ast:1.8,stl:0.8,blk:0.2},
+      {name:"Isaiah Stewart",   pos:"PF", age:23, sal:"$16.0M", yrs:3, pts: 9.4,reb:7.0,ast:2.5,stl:0.9,blk:0.8},
+      {name:"Bojan Bogdanovic", pos:"SF", age:35, sal:"$20.0M", yrs:1, pts:11.8,reb:2.7,ast:1.8,stl:0.5,blk:0.2},
+      {name:"Marcus Sasser",    pos:"SG", age:24, sal:"$ 2.0M", yrs:2, pts: 6.2,reb:1.8,ast:2.4,stl:0.9,blk:0.2},
+      {name:"Simone Fontecchio",pos:"SF", age:28, sal:"$10.0M", yrs:2, pts: 9.5,reb:3.2,ast:1.6,stl:0.6,blk:0.3},
+    ]
+  },
+  {
+    city:"Golden State", name:"Warriors", conf:"Pacific · Western Conference", color:"#1D428A", emoji:"🌉",
+    roster:[
+      {name:"Stephen Curry",    pos:"PG", age:36, sal:"$51.9M", yrs:2, pts:26.4,reb:4.5,ast:5.1,stl:0.8,blk:0.4},
+      {name:"Draymond Green",   pos:"PF", age:34, sal:"$22.3M", yrs:2, pts: 9.0,reb:7.4,ast:6.9,stl:0.9,blk:0.8},
+      {name:"Andrew Wiggins",   pos:"SF", age:29, sal:"$24.3M", yrs:2, pts:16.3,reb:4.9,ast:2.2,stl:1.0,blk:0.7},
+      {name:"Jonathan Kuminga", pos:"PF", age:22, sal:"$29.0M", yrs:4, pts:16.0,reb:4.7,ast:2.3,stl:0.9,blk:0.5},
+      {name:"Brandin Podziemski",pos:"SG",age:22, sal:"$ 3.2M", yrs:3, pts:11.2,reb:5.9,ast:3.3,stl:0.9,blk:0.3},
+      {name:"Moses Moody",      pos:"SG", age:23, sal:"$ 4.8M", yrs:2, pts:10.5,reb:3.2,ast:1.5,stl:0.9,blk:0.4},
+      {name:"Kevon Looney",     pos:"C",  age:28, sal:"$ 7.5M", yrs:1, pts: 5.4,reb:7.2,ast:2.4,stl:0.6,blk:0.4},
+      {name:"De'Anthony Melton",pos:"SG", age:26, sal:"$ 8.5M", yrs:1, pts: 7.5,reb:3.0,ast:2.5,stl:1.2,blk:0.3},
+      {name:"Kyle Anderson",    pos:"PF", age:31, sal:"$ 8.5M", yrs:1, pts: 6.5,reb:4.0,ast:3.0,stl:1.0,blk:0.5},
+      {name:"Buddy Hield",      pos:"SG", age:31, sal:"$14.3M", yrs:1, pts:11.0,reb:3.5,ast:2.0,stl:0.8,blk:0.2},
+    ]
+  },
+  {
+    city:"Houston", name:"Rockets", conf:"Southwest · Western Conference", color:"#CE1141", emoji:"🚀",
+    roster:[
+      {name:"Alperen Sengun",   pos:"C",  age:22, sal:"$16.0M", yrs:4, pts:21.1,reb:9.3,ast:5.6,stl:0.9,blk:1.8},
+      {name:"Jalen Green",      pos:"SG", age:22, sal:"$31.5M", yrs:3, pts:22.6,reb:4.5,ast:4.7,stl:1.0,blk:0.5},
+      {name:"Amen Thompson",    pos:"SF", age:22, sal:"$ 7.5M", yrs:3, pts:14.4,reb:7.9,ast:4.5,stl:1.6,blk:0.6},
+      {name:"Dillon Brooks",    pos:"SF", age:28, sal:"$22.0M", yrs:2, pts:12.8,reb:3.4,ast:2.4,stl:1.4,blk:0.5},
+      {name:"Fred VanVleet",    pos:"PG", age:30, sal:"$42.9M", yrs:2, pts:13.1,reb:3.6,ast:7.2,stl:1.6,blk:0.3},
+      {name:"Jabari Smith Jr.", pos:"PF", age:22, sal:"$11.7M", yrs:2, pts:13.0,reb:6.9,ast:2.0,stl:1.0,blk:1.1},
+      {name:"Tari Eason",       pos:"SF", age:23, sal:"$ 5.1M", yrs:2, pts: 9.5,reb:5.0,ast:1.5,stl:1.5,blk:0.6},
+      {name:"Steven Adams",     pos:"C",  age:31, sal:"$14.4M", yrs:1, pts: 5.3,reb:8.5,ast:1.5,stl:0.8,blk:0.6},
+      {name:"Aaron Holiday",    pos:"PG", age:28, sal:"$ 3.5M", yrs:1, pts: 7.2,reb:2.1,ast:3.5,stl:0.8,blk:0.2},
+      {name:"Jeff Green",       pos:"PF", age:37, sal:"$ 3.0M", yrs:1, pts: 4.5,reb:2.5,ast:0.9,stl:0.4,blk:0.4},
+    ]
+  },
+  {
+    city:"Indiana", name:"Pacers", conf:"Central · Eastern Conference", color:"#002D62", emoji:"🏎️",
+    roster:[
+      {name:"Tyrese Haliburton", pos:"PG",age:24, sal:"$26.0M", yrs:4, pts:20.1,reb:3.9,ast:10.9,stl:1.2,blk:0.4},
+      {name:"Pascal Siakam",    pos:"PF", age:30, sal:"$37.9M", yrs:3, pts:21.3,reb:7.8,ast:3.7,stl:0.9,blk:0.7},
+      {name:"Myles Turner",     pos:"C",  age:28, sal:"$19.9M", yrs:2, pts:16.4,reb:7.4,ast:1.9,stl:0.8,blk:2.6},
+      {name:"Andrew Nembhard",  pos:"PG", age:25, sal:"$ 9.8M", yrs:3, pts:13.3,reb:3.7,ast:5.5,stl:1.3,blk:0.4},
+      {name:"Bennedict Mathurin",pos:"SG",age:22, sal:"$ 9.2M", yrs:2, pts:18.7,reb:4.7,ast:2.0,stl:0.8,blk:0.5},
+      {name:"T.J. McConnell",   pos:"PG", age:32, sal:"$ 9.2M", yrs:1, pts: 9.0,reb:3.3,ast:5.5,stl:1.4,blk:0.2},
+      {name:"Aaron Nesmith",    pos:"SF", age:25, sal:"$17.0M", yrs:3, pts:12.5,reb:5.5,ast:2.0,stl:1.2,blk:0.5},
+      {name:"Obi Toppin",       pos:"PF", age:26, sal:"$14.5M", yrs:2, pts:10.5,reb:4.3,ast:1.5,stl:0.6,blk:0.4},
+      {name:"Isaiah Jackson",   pos:"C",  age:23, sal:"$ 5.0M", yrs:2, pts: 6.8,reb:5.5,ast:0.7,stl:0.5,blk:1.6},
+      {name:"James Wiseman",    pos:"C",  age:23, sal:"$ 5.5M", yrs:1, pts: 7.0,reb:5.9,ast:0.8,stl:0.4,blk:0.9},
+    ]
+  },
+  {
+    city:"LA", name:"Clippers", conf:"Pacific · Western Conference", color:"#C8102E", emoji:"⛵",
+    roster:[
+      {name:"Kawhi Leonard",    pos:"SF", age:33, sal:"$48.8M", yrs:2, pts:22.0,reb:6.1,ast:3.7,stl:1.6,blk:0.8},
+      {name:"Paul George",      pos:"SF", age:34, sal:"$51.4M", yrs:4, pts:22.6,reb:5.2,ast:3.8,stl:1.2,blk:0.5},
+      {name:"James Harden",     pos:"PG", age:35, sal:"$35.6M", yrs:2, pts:16.8,reb:5.1,ast:8.5,stl:1.1,blk:0.6},
+      {name:"Ivica Zubac",      pos:"C",  age:27, sal:"$22.0M", yrs:3, pts:13.1,reb:10.1,ast:2.5,stl:0.7,blk:1.5},
+      {name:"Norman Powell",    pos:"SG", age:31, sal:"$22.6M", yrs:3, pts:24.0,reb:3.0,ast:2.1,stl:1.0,blk:0.3},
+      {name:"Derrick Jones Jr.",pos:"PF", age:27, sal:"$ 8.5M", yrs:2, pts: 7.8,reb:4.3,ast:1.7,stl:1.2,blk:0.9},
+      {name:"Terance Mann",     pos:"SG", age:28, sal:"$14.0M", yrs:2, pts: 9.5,reb:4.0,ast:2.5,stl:0.8,blk:0.3},
+      {name:"Bones Hyland",     pos:"PG", age:24, sal:"$ 7.0M", yrs:1, pts:10.0,reb:2.5,ast:3.5,stl:0.9,blk:0.2},
+      {name:"P.J. Tucker",      pos:"PF", age:39, sal:"$ 3.0M", yrs:1, pts: 3.0,reb:3.2,ast:1.0,stl:0.6,blk:0.3},
+      {name:"Kobe Brown",       pos:"SF", age:24, sal:"$ 2.2M", yrs:2, pts: 7.5,reb:3.5,ast:1.2,stl:0.6,blk:0.3},
+    ]
+  },
+  {
+    city:"Los Angeles", name:"Lakers", conf:"Pacific · Western Conference", color:"#552583", emoji:"👑",
+    roster:[
+      {name:"LeBron James",     pos:"SF", age:40, sal:"$51.4M", yrs:2, pts:24.0,reb:7.3,ast:8.2,stl:1.1,blk:0.6},
+      {name:"Anthony Davis",    pos:"C",  age:31, sal:"$43.2M", yrs:2, pts:24.7,reb:12.6,ast:3.5,stl:1.2,blk:2.0},
+      {name:"D'Angelo Russell", pos:"PG", age:28, sal:"$18.0M", yrs:1, pts:14.3,reb:3.0,ast:6.3,stl:0.8,blk:0.3},
+      {name:"Austin Reaves",    pos:"SG", age:26, sal:"$13.0M", yrs:3, pts:15.9,reb:4.4,ast:5.5,stl:1.0,blk:0.3},
+      {name:"Rui Hachimura",    pos:"PF", age:26, sal:"$17.0M", yrs:2, pts:13.5,reb:4.5,ast:1.5,stl:0.6,blk:0.4},
+      {name:"Gabe Vincent",     pos:"PG", age:28, sal:"$11.0M", yrs:1, pts: 6.0,reb:2.0,ast:2.5,stl:0.8,blk:0.2},
+      {name:"Jarred Vanderbilt",pos:"PF", age:25, sal:"$13.0M", yrs:3, pts: 5.0,reb:6.5,ast:1.8,stl:1.1,blk:0.5},
+      {name:"Christian Wood",   pos:"PF", age:29, sal:"$ 5.0M", yrs:1, pts: 8.0,reb:5.0,ast:1.0,stl:0.5,blk:0.8},
+      {name:"Taurean Prince",   pos:"SF", age:30, sal:"$ 8.0M", yrs:2, pts: 9.5,reb:3.5,ast:1.8,stl:0.8,blk:0.3},
+      {name:"Cam Reddish",      pos:"SF", age:25, sal:"$ 5.0M", yrs:1, pts: 7.5,reb:2.8,ast:1.2,stl:0.8,blk:0.4},
+    ]
+  },
+  {
+    city:"Memphis", name:"Grizzlies", conf:"Southwest · Western Conference", color:"#5D76A9", emoji:"🐻",
+    roster:[
+      {name:"Ja Morant",        pos:"PG", age:25, sal:"$36.0M", yrs:4, pts:25.1,reb:5.6,ast:8.9,stl:1.0,blk:0.5},
+      {name:"Jaren Jackson Jr.",pos:"C",  age:25, sal:"$33.1M", yrs:3, pts:22.0,reb:6.5,ast:2.3,stl:1.2,blk:3.0},
+      {name:"Desmond Bane",     pos:"SG", age:26, sal:"$28.0M", yrs:3, pts:20.5,reb:4.4,ast:4.4,stl:1.1,blk:0.4},
+      {name:"Marcus Smart",     pos:"PG", age:30, sal:"$18.8M", yrs:2, pts: 9.8,reb:3.3,ast:6.2,stl:1.5,blk:0.5},
+      {name:"GG Jackson",       pos:"PF", age:21, sal:"$ 3.2M", yrs:3, pts:17.0,reb:4.8,ast:2.0,stl:0.9,blk:0.5},
+      {name:"Santi Aldama",     pos:"PF", age:23, sal:"$ 4.5M", yrs:3, pts:13.0,reb:5.5,ast:2.5,stl:0.9,blk:1.0},
+      {name:"Ziaire Williams",  pos:"SF", age:23, sal:"$ 5.3M", yrs:2, pts:10.0,reb:3.5,ast:2.0,stl:0.8,blk:0.5},
+      {name:"Brandon Clarke",   pos:"PF", age:28, sal:"$13.0M", yrs:1, pts: 9.0,reb:5.0,ast:1.5,stl:0.6,blk:1.2},
+      {name:"John Konchar",     pos:"SG", age:27, sal:"$ 8.5M", yrs:1, pts: 5.5,reb:4.5,ast:1.8,stl:0.9,blk:0.3},
+      {name:"Luke Kennard",     pos:"SG", age:28, sal:"$14.0M", yrs:1, pts: 9.0,reb:2.5,ast:2.0,stl:0.6,blk:0.1},
+    ]
+  },
+  {
+    city:"Miami", name:"Heat", conf:"Southeast · Eastern Conference", color:"#98002E", emoji:"🔥",
+    roster:[
+      {name:"Bam Adebayo",      pos:"C",  age:27, sal:"$32.6M", yrs:3, pts:20.4,reb:10.4,ast:4.9,stl:1.2,blk:0.8},
+      {name:"Tyler Herro",      pos:"SG", age:24, sal:"$27.0M", yrs:3, pts:24.3,reb:5.3,ast:5.1,stl:0.9,blk:0.2},
+      {name:"Jimmy Butler",     pos:"SF", age:35, sal:"$48.8M", yrs:1, pts:20.8,reb:5.3,ast:5.0,stl:1.3,blk:0.5},
+      {name:"Terry Rozier",     pos:"SG", age:30, sal:"$26.6M", yrs:2, pts:17.2,reb:3.9,ast:4.5,stl:1.2,blk:0.3},
+      {name:"Caleb Martin",     pos:"SF", age:29, sal:"$14.0M", yrs:2, pts: 9.5,reb:4.4,ast:1.8,stl:1.0,blk:0.5},
+      {name:"Kyle Lowry",       pos:"PG", age:38, sal:"$ 8.0M", yrs:1, pts: 5.5,reb:2.8,ast:5.0,stl:0.8,blk:0.2},
+      {name:"Nikola Jovic",     pos:"PF", age:22, sal:"$ 3.5M", yrs:2, pts: 8.0,reb:4.0,ast:2.5,stl:0.6,blk:0.5},
+      {name:"Josh Richardson",  pos:"SG", age:31, sal:"$ 4.0M", yrs:1, pts: 8.5,reb:3.0,ast:2.0,stl:1.0,blk:0.4},
+      {name:"Thomas Bryant",    pos:"C",  age:27, sal:"$ 7.0M", yrs:1, pts: 9.0,reb:6.5,ast:1.0,stl:0.3,blk:0.8},
+      {name:"Jaime Jaquez Jr.", pos:"SF", age:23, sal:"$ 4.0M", yrs:3, pts: 9.5,reb:4.0,ast:2.5,stl:0.8,blk:0.3},
+    ]
+  },
+  {
+    city:"Milwaukee", name:"Bucks", conf:"Central · Eastern Conference", color:"#00471B", emoji:"🦌",
+    roster:[
+      {name:"Giannis Antetokounmpo",pos:"PF",age:30,sal:"$48.8M",yrs:3,pts:30.4,reb:11.5,ast:6.5,stl:1.2,blk:1.1},
+      {name:"Damian Lillard",   pos:"PG", age:34, sal:"$48.7M", yrs:3, pts:25.3,reb:4.4,ast:7.3,stl:0.9,blk:0.3},
+      {name:"Brook Lopez",      pos:"C",  age:36, sal:"$20.8M", yrs:1, pts:13.3,reb:4.9,ast:2.3,stl:0.6,blk:2.6},
+      {name:"Khris Middleton",  pos:"SF", age:33, sal:"$33.6M", yrs:1, pts:15.3,reb:5.0,ast:5.1,stl:1.0,blk:0.3},
+      {name:"Bobby Portis",     pos:"PF", age:30, sal:"$13.5M", yrs:1, pts:14.0,reb:8.0,ast:1.5,stl:0.7,blk:0.4},
+      {name:"Taurean Prince",   pos:"SF", age:30, sal:"$ 7.0M", yrs:1, pts: 9.5,reb:3.5,ast:1.8,stl:0.8,blk:0.3},
+      {name:"Pat Connaughton",  pos:"SG", age:32, sal:"$10.0M", yrs:1, pts: 7.5,reb:3.8,ast:1.5,stl:0.6,blk:0.3},
+      {name:"AJ Green",         pos:"SG", age:25, sal:"$ 2.5M", yrs:2, pts: 8.0,reb:2.0,ast:1.2,stl:0.5,blk:0.2},
+      {name:"MarJon Beauchamp", pos:"SF", age:23, sal:"$ 4.3M", yrs:2, pts: 6.5,reb:3.5,ast:1.5,stl:0.8,blk:0.5},
+      {name:"Robin Lopez",      pos:"C",  age:36, sal:"$ 2.2M", yrs:1, pts: 3.5,reb:3.0,ast:0.5,stl:0.3,blk:0.6},
+    ]
+  },
+  {
+    city:"Minnesota", name:"Timberwolves", conf:"Northwest · Western Conference", color:"#0C2340", emoji:"🐺",
+    roster:[
+      {name:"Anthony Edwards", pos:"SG", age:23, sal:"$40.8M", yrs:4, pts:25.9,reb:5.4,ast:5.1,stl:1.3,blk:0.6},
+      {name:"Karl-Anthony Towns",pos:"C", age:29, sal:"$49.3M", yrs:3, pts:21.4,reb:8.5,ast:3.0,stl:0.8,blk:0.6},
+      {name:"Rudy Gobert",      pos:"C",  age:32, sal:"$41.0M", yrs:2, pts:15.2,reb:12.9,ast:1.8,stl:0.9,blk:2.1},
+      {name:"Mike Conley",      pos:"PG", age:37, sal:"$12.7M", yrs:1, pts: 9.4,reb:2.7,ast:6.6,stl:1.0,blk:0.2},
+      {name:"Jaden McDaniels",  pos:"SF", age:23, sal:"$20.0M", yrs:4, pts:14.7,reb:4.0,ast:2.2,stl:1.3,blk:1.0},
+      {name:"Naz Reid",         pos:"C",  age:25, sal:"$14.5M", yrs:2, pts:13.5,reb:5.8,ast:2.1,stl:0.7,blk:1.1},
+      {name:"Nickeil Alexander-Walker",pos:"SG",age:26,sal:"$16.5M",yrs:2,pts:11.0,reb:3.0,ast:2.8,stl:1.2,blk:0.4},
+      {name:"Kyle Anderson",    pos:"PF", age:31, sal:"$ 8.5M", yrs:1, pts: 6.5,reb:4.0,ast:3.0,stl:1.0,blk:0.5},
+      {name:"Donte DiVincenzo", pos:"SG", age:27, sal:"$13.0M", yrs:2, pts:12.0,reb:3.5,ast:3.0,stl:1.1,blk:0.3},
+      {name:"Troy Brown Jr.",   pos:"PF", age:25, sal:"$ 4.5M", yrs:1, pts: 5.5,reb:4.0,ast:1.8,stl:0.7,blk:0.3},
+    ]
+  },
+  {
+    city:"New Orleans", name:"Pelicans", conf:"Southwest · Western Conference", color:"#0C2340", emoji:"🦩",
+    roster:[
+      {name:"Zion Williamson",  pos:"PF", age:24, sal:"$37.0M", yrs:3, pts:22.9,reb:5.8,ast:4.8,stl:1.2,blk:0.7},
+      {name:"Brandon Ingram",   pos:"SF", age:27, sal:"$36.0M", yrs:2, pts:22.0,reb:5.1,ast:5.0,stl:0.9,blk:0.5},
+      {name:"CJ McCollum",      pos:"SG", age:33, sal:"$33.6M", yrs:2, pts:20.6,reb:4.2,ast:5.3,stl:1.0,blk:0.4},
+      {name:"Jonas Valanciunas",pos:"C",  age:32, sal:"$15.6M", yrs:1, pts:12.5,reb:10.0,ast:1.8,stl:0.5,blk:0.5},
+      {name:"Herbert Jones",    pos:"SF", age:25, sal:"$13.0M", yrs:3, pts: 9.0,reb:4.0,ast:2.5,stl:1.5,blk:0.7},
+      {name:"Trey Murphy III",  pos:"SF", age:24, sal:"$ 8.5M", yrs:3, pts:16.5,reb:4.5,ast:2.0,stl:1.0,blk:0.5},
+      {name:"Jose Alvarado",    pos:"PG", age:26, sal:"$ 6.0M", yrs:2, pts: 9.5,reb:2.5,ast:3.0,stl:2.0,blk:0.3},
+      {name:"Larry Nance Jr.",  pos:"PF", age:32, sal:"$ 9.0M", yrs:1, pts: 7.0,reb:5.5,ast:2.5,stl:1.0,blk:0.6},
+      {name:"E.J. Liddell",     pos:"PF", age:23, sal:"$ 2.0M", yrs:2, pts: 5.0,reb:4.0,ast:1.0,stl:0.5,blk:0.8},
+      {name:"Dyson Daniels",    pos:"SG", age:21, sal:"$ 5.9M", yrs:1, pts: 9.8,reb:4.3,ast:3.2,stl:2.1,blk:0.3},
+    ]
+  },
+  {
+    city:"New York", name:"Knicks", conf:"Atlantic · Eastern Conference", color:"#006BB6", emoji:"🗽",
+    roster:[
+      {name:"Jalen Brunson",    pos:"PG", age:27, sal:"$26.0M", yrs:5, pts:29.0,reb:3.7,ast:7.7,stl:0.9,blk:0.2},
+      {name:"Julius Randle",    pos:"PF", age:29, sal:"$28.9M", yrs:2, pts:24.0,reb:9.2,ast:5.0,stl:0.9,blk:0.4},
+      {name:"OG Anunoby",       pos:"SF", age:27, sal:"$35.0M", yrs:4, pts:14.7,reb:4.5,ast:1.9,stl:1.5,blk:0.8},
+      {name:"Josh Hart",        pos:"PG", age:29, sal:"$19.5M", yrs:3, pts:12.1,reb:8.8,ast:5.0,stl:1.3,blk:0.4},
+      {name:"Isaiah Hartenstein",pos:"C", age:26, sal:"$16.0M", yrs:3, pts:10.5,reb:9.0,ast:3.5,stl:1.0,blk:1.0},
+      {name:"Mikal Bridges",    pos:"SF", age:28, sal:"$23.0M", yrs:3, pts:13.4,reb:4.5,ast:2.5,stl:0.9,blk:0.5},
+      {name:"Donte DiVincenzo", pos:"SG", age:27, sal:"$13.0M", yrs:1, pts:15.5,reb:4.5,ast:3.5,stl:1.2,blk:0.3},
+      {name:"Mitchell Robinson",pos:"C",  age:26, sal:"$15.9M", yrs:1, pts: 6.5,reb:8.0,ast:0.7,stl:0.5,blk:1.9},
+      {name:"Precious Achiuwa", pos:"PF", age:25, sal:"$ 8.5M", yrs:2, pts: 7.5,reb:5.5,ast:1.0,stl:0.7,blk:0.7},
+      {name:"Miles McBride",    pos:"PG", age:24, sal:"$ 4.5M", yrs:2, pts: 9.5,reb:2.5,ast:3.0,stl:1.0,blk:0.3},
+    ]
+  },
+  {
+    city:"Oklahoma City", name:"Thunder", conf:"Northwest · Western Conference", color:"#007AC1", emoji:"⚡",
+    roster:[
+      {name:"Shai Gilgeous-Alexander",pos:"PG",age:26,sal:"$34.0M",yrs:5,pts:30.1,reb:5.5,ast:6.2,stl:2.0,blk:1.0},
+      {name:"Jalen Williams",   pos:"SG", age:23, sal:"$14.0M", yrs:4, pts:23.0,reb:4.5,ast:5.9,stl:1.3,blk:0.8},
+      {name:"Luguentz Dort",    pos:"SG", age:25, sal:"$16.0M", yrs:2, pts:14.8,reb:4.4,ast:2.2,stl:1.4,blk:0.5},
+      {name:"Chet Holmgren",    pos:"C",  age:22, sal:"$12.7M", yrs:3, pts:16.5,reb:7.9,ast:2.4,stl:0.9,blk:2.3},
+      {name:"Isaiah Joe",       pos:"SG", age:25, sal:"$ 5.7M", yrs:2, pts:11.0,reb:2.8,ast:1.8,stl:0.8,blk:0.3},
+      {name:"Aaron Wiggins",    pos:"SG", age:25, sal:"$ 7.5M", yrs:2, pts: 9.0,reb:3.2,ast:2.0,stl:1.0,blk:0.4},
+      {name:"Kenrich Williams", pos:"SF", age:29, sal:"$ 9.0M", yrs:1, pts: 7.5,reb:4.5,ast:2.5,stl:1.2,blk:0.5},
+      {name:"Josh Giddey",      pos:"PG", age:22, sal:"$13.0M", yrs:2, pts:14.5,reb:7.5,ast:6.5,stl:1.0,blk:0.3},
+      {name:"Aleksej Pokusevski",pos:"PF",age:23, sal:"$ 3.2M", yrs:1, pts: 5.0,reb:3.0,ast:1.5,stl:0.5,blk:0.8},
+      {name:"Jaylin Williams",  pos:"PF", age:22, sal:"$ 2.2M", yrs:2, pts: 4.5,reb:4.0,ast:1.5,stl:0.5,blk:0.5},
+    ]
+  },
+  {
+    city:"Orlando", name:"Magic", conf:"Southeast · Eastern Conference", color:"#0077C0", emoji:"✨",
+    roster:[
+      {name:"Paolo Banchero",   pos:"PF", age:22, sal:"$10.2M", yrs:4, pts:22.6,reb:6.9,ast:5.4,stl:1.0,blk:0.9},
+      {name:"Franz Wagner",     pos:"SF", age:23, sal:"$ 9.5M", yrs:4, pts:21.0,reb:5.8,ast:4.2,stl:1.1,blk:0.5},
+      {name:"Jalen Suggs",      pos:"PG", age:23, sal:"$ 8.4M", yrs:2, pts:13.5,reb:3.4,ast:4.4,stl:1.5,blk:0.5},
+      {name:"Wendell Carter Jr.",pos:"C", age:25, sal:"$17.0M", yrs:2, pts:13.8,reb:9.4,ast:3.0,stl:0.9,blk:1.3},
+      {name:"Moritz Wagner",    pos:"C",  age:27, sal:"$18.0M", yrs:3, pts:14.2,reb:5.8,ast:2.0,stl:0.7,blk:0.6},
+      {name:"Gary Harris",      pos:"SG", age:30, sal:"$ 9.0M", yrs:1, pts: 8.5,reb:2.5,ast:2.0,stl:0.8,blk:0.2},
+      {name:"Jonathan Isaac",   pos:"PF", age:27, sal:"$17.0M", yrs:2, pts: 8.8,reb:5.0,ast:1.5,stl:1.0,blk:2.2},
+      {name:"Cole Anthony",     pos:"PG", age:24, sal:"$16.5M", yrs:2, pts:14.0,reb:4.8,ast:5.0,stl:0.8,blk:0.3},
+      {name:"Markelle Fultz",   pos:"PG", age:26, sal:"$16.5M", yrs:2, pts: 8.5,reb:3.5,ast:4.5,stl:0.8,blk:0.4},
+      {name:"Anthony Black",    pos:"PG", age:21, sal:"$ 5.7M", yrs:3, pts: 7.0,reb:3.5,ast:3.5,stl:1.2,blk:0.4},
+    ]
+  },
+  {
+    city:"Philadelphia", name:"76ers", conf:"Atlantic · Eastern Conference", color:"#006BB6", emoji:"🔔",
+    roster:[
+      {name:"Joel Embiid",      pos:"C",  age:30, sal:"$51.4M", yrs:3, pts:34.7,reb:11.0,ast:5.6,stl:1.0,blk:1.7},
+      {name:"Tyrese Maxey",     pos:"PG", age:23, sal:"$29.4M", yrs:4, pts:25.9,reb:3.8,ast:6.2,stl:1.0,blk:0.5},
+      {name:"Paul George",      pos:"SF", age:34, sal:"$51.4M", yrs:3, pts:22.6,reb:5.2,ast:3.8,stl:1.2,blk:0.5},
+      {name:"Kelly Oubre Jr.",  pos:"SF", age:28, sal:"$13.0M", yrs:1, pts:15.4,reb:5.0,ast:2.2,stl:1.3,blk:0.4},
+      {name:"Tobias Harris",    pos:"PF", age:31, sal:"$39.5M", yrs:1, pts:17.2,reb:6.5,ast:3.1,stl:0.7,blk:0.5},
+      {name:"Kyle Lowry",       pos:"PG", age:38, sal:"$ 7.5M", yrs:1, pts: 5.5,reb:2.8,ast:5.0,stl:0.8,blk:0.2},
+      {name:"Nico Batum",       pos:"SF", age:35, sal:"$ 4.5M", yrs:1, pts: 5.5,reb:3.5,ast:1.5,stl:0.8,blk:0.5},
+      {name:"Robert Covington", pos:"SF", age:33, sal:"$ 4.0M", yrs:1, pts: 5.0,reb:4.5,ast:1.0,stl:1.0,blk:0.8},
+      {name:"Mo Bamba",         pos:"C",  age:26, sal:"$ 4.0M", yrs:1, pts: 5.5,reb:5.0,ast:0.8,stl:0.4,blk:1.2},
+      {name:"Cameron Payne",    pos:"PG", age:29, sal:"$ 4.0M", yrs:1, pts: 7.0,reb:2.5,ast:4.5,stl:0.7,blk:0.2},
+    ]
+  },
+  {
+    city:"Phoenix", name:"Suns", conf:"Pacific · Western Conference", color:"#E56020", emoji:"☀️",
+    roster:[
+      {name:"Kevin Durant",     pos:"PF", age:36, sal:"$51.4M", yrs:2, pts:27.1,reb:6.6,ast:4.0,stl:0.9,blk:1.2},
+      {name:"Devin Booker",     pos:"SG", age:28, sal:"$36.0M", yrs:4, pts:25.7,reb:4.5,ast:6.9,stl:1.1,blk:0.4},
+      {name:"Bradley Beal",     pos:"SG", age:31, sal:"$46.7M", yrs:2, pts:18.2,reb:4.0,ast:5.0,stl:1.0,blk:0.3},
+      {name:"Jusuf Nurkic",     pos:"C",  age:30, sal:"$18.0M", yrs:1, pts:12.0,reb:10.5,ast:3.5,stl:0.8,blk:0.8},
+      {name:"Grayson Allen",    pos:"SG", age:29, sal:"$18.0M", yrs:2, pts:11.5,reb:3.2,ast:2.5,stl:1.0,blk:0.3},
+      {name:"Royce O'Neale",    pos:"SF", age:31, sal:"$ 9.8M", yrs:1, pts: 7.5,reb:4.5,ast:2.5,stl:0.8,blk:0.3},
+      {name:"Drew Eubanks",     pos:"C",  age:27, sal:"$ 7.0M", yrs:1, pts: 7.5,reb:6.0,ast:1.5,stl:0.5,blk:0.9},
+      {name:"Nassir Little",    pos:"SF", age:25, sal:"$ 5.5M", yrs:1, pts: 5.5,reb:3.0,ast:0.8,stl:0.7,blk:0.4},
+      {name:"Eric Gordon",      pos:"SG", age:36, sal:"$ 6.5M", yrs:1, pts: 9.5,reb:2.0,ast:2.0,stl:0.7,blk:0.2},
+      {name:"Bol Bol",          pos:"C",  age:26, sal:"$ 4.0M", yrs:1, pts: 7.0,reb:4.0,ast:1.0,stl:0.4,blk:1.0},
+    ]
+  },
+  {
+    city:"Portland", name:"Trail Blazers", conf:"Northwest · Western Conference", color:"#E03A3E", emoji:"🌲",
+    roster:[
+      {name:"Anfernee Simons",  pos:"PG", age:25, sal:"$25.5M", yrs:3, pts:21.5,reb:3.5,ast:6.0,stl:0.9,blk:0.3},
+      {name:"Jerami Grant",     pos:"PF", age:30, sal:"$30.0M", yrs:2, pts:18.0,reb:4.2,ast:2.4,stl:0.9,blk:1.0},
+      {name:"Deandre Ayton",    pos:"C",  age:26, sal:"$33.0M", yrs:2, pts:18.0,reb:10.0,ast:2.2,stl:0.7,blk:1.0},
+      {name:"Scoot Henderson",  pos:"PG", age:21, sal:"$ 8.5M", yrs:3, pts:14.0,reb:3.5,ast:5.8,stl:1.1,blk:0.3},
+      {name:"Matisse Thybulle", pos:"SF", age:27, sal:"$12.5M", yrs:1, pts: 7.5,reb:3.5,ast:1.5,stl:2.0,blk:0.9},
+      {name:"Jabari Walker",    pos:"PF", age:22, sal:"$ 2.3M", yrs:2, pts: 8.0,reb:5.5,ast:1.5,stl:0.6,blk:0.5},
+      {name:"Robert Williams III",pos:"C",age:27,sal:"$13.5M", yrs:2, pts: 8.5,reb:8.0,ast:1.2,stl:0.8,blk:2.0},
+      {name:"Shaedon Sharpe",   pos:"SG", age:22, sal:"$ 7.1M", yrs:3, pts:15.0,reb:3.5,ast:2.5,stl:1.0,blk:0.5},
+      {name:"Malcolm Brogdon",  pos:"PG", age:31, sal:"$22.5M", yrs:1, pts:12.0,reb:3.5,ast:5.0,stl:0.8,blk:0.3},
+      {name:"Kris Murray",      pos:"SF", age:23, sal:"$ 2.6M", yrs:3, pts: 6.0,reb:3.5,ast:1.2,stl:0.5,blk:0.4},
+    ]
+  },
+  {
+    city:"Sacramento", name:"Kings", conf:"Pacific · Western Conference", color:"#5A2D81", emoji:"👑",
+    roster:[
+      {name:"De'Aaron Fox",     pos:"PG", age:26, sal:"$30.3M", yrs:2, pts:26.6,reb:4.4,ast:6.0,stl:1.4,blk:0.5},
+      {name:"Domantas Sabonis", pos:"C",  age:28, sal:"$22.0M", yrs:3, pts:19.5,reb:13.7,ast:7.3,stl:1.0,blk:0.5},
+      {name:"Kevin Huerter",    pos:"SG", age:25, sal:"$16.0M", yrs:3, pts:13.5,reb:3.8,ast:3.0,stl:0.8,blk:0.3},
+      {name:"Harrison Barnes",  pos:"PF", age:32, sal:"$17.3M", yrs:1, pts:13.0,reb:5.0,ast:2.0,stl:0.7,blk:0.5},
+      {name:"Malik Monk",       pos:"PG", age:26, sal:"$19.3M", yrs:2, pts:15.0,reb:3.0,ast:4.5,stl:1.0,blk:0.2},
+      {name:"Trey Lyles",       pos:"PF", age:28, sal:"$ 7.5M", yrs:1, pts: 8.5,reb:4.5,ast:1.5,stl:0.4,blk:0.4},
+      {name:"Chris Duarte",     pos:"SG", age:27, sal:"$ 4.5M", yrs:1, pts: 8.0,reb:2.5,ast:1.5,stl:0.7,blk:0.2},
+      {name:"Richaun Holmes",   pos:"C",  age:30, sal:"$ 5.5M", yrs:1, pts: 6.5,reb:5.0,ast:1.0,stl:0.6,blk:0.8},
+      {name:"Davion Mitchell",  pos:"PG", age:25, sal:"$ 5.3M", yrs:2, pts: 8.5,reb:2.0,ast:3.5,stl:1.2,blk:0.2},
+      {name:"Alex Len",         pos:"C",  age:31, sal:"$ 2.5M", yrs:1, pts: 4.0,reb:4.5,ast:0.8,stl:0.3,blk:0.6},
+    ]
+  },
+  {
+    city:"San Antonio", name:"Spurs", conf:"Southwest · Western Conference", color:"#C4CED4", emoji:"🌵",
+    roster:[
+      {name:"Victor Wembanyama",pos:"C",  age:21, sal:"$12.2M", yrs:4, pts:21.4,reb:10.6,ast:3.9,stl:1.2,blk:3.6},
+      {name:"Devin Vassell",    pos:"SG", age:24, sal:"$22.5M", yrs:4, pts:19.5,reb:4.5,ast:3.8,stl:1.2,blk:0.6},
+      {name:"Keldon Johnson",   pos:"SF", age:24, sal:"$18.0M", yrs:3, pts:15.0,reb:5.5,ast:2.5,stl:1.1,blk:0.4},
+      {name:"Jeremy Sochan",    pos:"PF", age:21, sal:"$ 8.5M", yrs:3, pts:11.5,reb:5.5,ast:4.0,stl:1.0,blk:0.5},
+      {name:"Tre Jones",        pos:"PG", age:24, sal:"$ 7.0M", yrs:2, pts: 9.5,reb:3.0,ast:6.5,stl:1.2,blk:0.2},
+      {name:"Julian Champagnie",pos:"SF", age:23, sal:"$ 2.5M", yrs:2, pts: 9.0,reb:3.5,ast:1.0,stl:0.7,blk:0.4},
+      {name:"Malaki Branham",   pos:"SG", age:21, sal:"$ 4.0M", yrs:3, pts: 9.0,reb:2.5,ast:2.0,stl:0.7,blk:0.3},
+      {name:"Blake Wesley",     pos:"SG", age:22, sal:"$ 3.6M", yrs:2, pts: 7.0,reb:2.0,ast:2.5,stl:0.8,blk:0.3},
+      {name:"Charles Bassey",   pos:"C",  age:24, sal:"$ 3.5M", yrs:1, pts: 6.5,reb:6.0,ast:1.0,stl:0.5,blk:1.2},
+      {name:"Cedi Osman",       pos:"SF", age:29, sal:"$ 4.0M", yrs:1, pts: 6.0,reb:2.5,ast:1.5,stl:0.5,blk:0.2},
+    ]
+  },
+  {
+    city:"Toronto", name:"Raptors", conf:"Atlantic · Eastern Conference", color:"#CE1141", emoji:"🦖",
+    roster:[
+      {name:"Scottie Barnes",   pos:"PF", age:23, sal:"$24.0M", yrs:4, pts:20.0,reb:8.5,ast:6.1,stl:1.3,blk:0.8},
+      {name:"RJ Barrett",       pos:"SF", age:24, sal:"$22.0M", yrs:3, pts:21.8,reb:6.0,ast:3.8,stl:0.9,blk:0.5},
+      {name:"Immanuel Quickley",pos:"PG", age:25, sal:"$22.0M", yrs:4, pts:18.6,reb:4.0,ast:6.8,stl:1.0,blk:0.3},
+      {name:"Jakob Poeltl",     pos:"C",  age:29, sal:"$18.6M", yrs:2, pts:12.0,reb:9.5,ast:3.0,stl:0.8,blk:1.8},
+      {name:"Bruce Brown",      pos:"PG", age:27, sal:"$22.8M", yrs:1, pts: 9.5,reb:4.5,ast:3.5,stl:1.1,blk:0.5},
+      {name:"Kelly Olynyk",     pos:"C",  age:33, sal:"$10.8M", yrs:1, pts: 9.0,reb:5.0,ast:3.0,stl:0.6,blk:0.5},
+      {name:"Chris Boucher",    pos:"PF", age:31, sal:"$ 8.5M", yrs:1, pts: 8.5,reb:5.5,ast:1.2,stl:0.6,blk:1.5},
+      {name:"Gradey Dick",      pos:"SG", age:21, sal:"$ 4.6M", yrs:3, pts: 9.5,reb:2.5,ast:1.5,stl:0.6,blk:0.3},
+      {name:"Ochai Agbaji",     pos:"SG", age:24, sal:"$ 3.5M", yrs:2, pts: 7.0,reb:3.0,ast:1.5,stl:0.7,blk:0.3},
+      {name:"Garrett Temple",   pos:"SG", age:38, sal:"$ 2.2M", yrs:1, pts: 3.5,reb:2.0,ast:1.5,stl:0.5,blk:0.2},
+    ]
+  },
+  {
+    city:"Utah", name:"Jazz", conf:"Northwest · Western Conference", color:"#002B5C", emoji:"🎵",
+    roster:[
+      {name:"Lauri Markkanen",  pos:"PF", age:27, sal:"$21.8M", yrs:3, pts:23.2,reb:8.2,ast:1.9,stl:0.7,blk:0.6},
+      {name:"Collin Sexton",    pos:"PG", age:25, sal:"$22.0M", yrs:3, pts:20.0,reb:3.0,ast:4.5,stl:0.9,blk:0.2},
+      {name:"Jordan Clarkson",  pos:"SG", age:32, sal:"$14.0M", yrs:1, pts:17.0,reb:3.5,ast:4.0,stl:0.8,blk:0.3},
+      {name:"Walker Kessler",   pos:"C",  age:23, sal:"$ 4.5M", yrs:3, pts: 9.5,reb:9.5,ast:1.5,stl:0.7,blk:2.5},
+      {name:"John Collins",     pos:"PF", age:27, sal:"$25.0M", yrs:2, pts:14.5,reb:6.8,ast:2.0,stl:0.6,blk:0.7},
+      {name:"Taylor Hendricks", pos:"SF", age:21, sal:"$ 4.7M", yrs:3, pts: 8.0,reb:4.5,ast:1.5,stl:0.7,blk:0.7},
+      {name:"Keyonte George",   pos:"PG", age:21, sal:"$ 5.8M", yrs:3, pts:14.0,reb:3.0,ast:5.5,stl:0.9,blk:0.3},
+      {name:"Talen Horton-Tucker",pos:"SG",age:24,sal:"$12.0M",yrs:1,pts: 9.5,reb:3.0,ast:3.0,stl:0.8,blk:0.3},
+      {name:"Simone Fontecchio",pos:"SF", age:28, sal:"$10.0M", yrs:1, pts:10.0,reb:3.5,ast:1.8,stl:0.6,blk:0.3},
+      {name:"Ochai Agbaji",     pos:"SG", age:24, sal:"$ 3.5M", yrs:1, pts: 7.0,reb:3.0,ast:1.5,stl:0.7,blk:0.3},
+    ]
+  },
+  {
+    city:"Washington", name:"Wizards", conf:"Southeast · Eastern Conference", color:"#002B5C", emoji:"🧙",
+    roster:[
+      {name:"Kyle Kuzma",       pos:"PF", age:29, sal:"$13.0M", yrs:1, pts:22.2,reb:7.2,ast:3.7,stl:0.7,blk:0.5},
+      {name:"Jordan Poole",     pos:"PG", age:25, sal:"$28.0M", yrs:3, pts:18.8,reb:2.9,ast:5.3,stl:0.8,blk:0.4},
+      {name:"Deni Avdija",      pos:"SF", age:23, sal:"$ 8.3M", yrs:2, pts:15.0,reb:7.5,ast:4.5,stl:1.3,blk:0.8},
+      {name:"Tyus Jones",       pos:"PG", age:28, sal:"$14.0M", yrs:2, pts:11.5,reb:2.8,ast:8.0,stl:0.9,blk:0.2},
+      {name:"Daniel Gafford",   pos:"C",  age:26, sal:"$13.5M", yrs:3, pts:12.5,reb:7.5,ast:1.5,stl:0.9,blk:2.3},
+      {name:"Marvin Bagley III",pos:"C",  age:25, sal:"$14.0M", yrs:1, pts:11.5,reb:7.0,ast:1.5,stl:0.5,blk:0.9},
+      {name:"Patrick Beverley", pos:"PG", age:35, sal:"$ 4.5M", yrs:1, pts: 6.5,reb:3.5,ast:3.0,stl:1.2,blk:0.2},
+      {name:"Corey Kispert",    pos:"SF", age:25, sal:"$12.0M", yrs:3, pts:11.0,reb:3.5,ast:1.5,stl:0.6,blk:0.3},
+      {name:"Bilal Coulibaly",  pos:"SF", age:20, sal:"$ 5.0M", yrs:3, pts: 9.5,reb:4.5,ast:2.5,stl:1.5,blk:0.7},
+      {name:"Tristan Vukcevic", pos:"C",  age:21, sal:"$ 2.2M", yrs:3, pts: 5.0,reb:4.0,ast:1.0,stl:0.4,blk:0.6},
+    ]
+  },
+];
+
+let idx = 0;
+
+function render() {
+  const t = teams[idx];
+  document.getElementById('team-header').style.background =
+    `linear-gradient(135deg, ${t.color}cc, ${t.color}66)`;
+  document.getElementById('team-logo').textContent = t.emoji;
+  document.getElementById('team-city').textContent = t.city;
+  document.getElementById('team-name').textContent = t.name;
+  document.getElementById('team-conf').textContent = t.conf;
+  document.getElementById('team-count').innerHTML =
+    `<div style="font-size:28px">${t.emoji}</div><div style="font-size:11px;margin-top:4px;letter-spacing:1px;color:#fff8">${t.roster.length} Players</div>`;
+  document.getElementById('pager-text').innerHTML =
+    `<span class="highlight">${idx+1}</span> / ${teams.length} &nbsp;·&nbsp; ${t.city} ${t.name}`;
+
+  const tbody = document.getElementById('roster-body');
+  tbody.innerHTML = '';
+  t.roster.forEach(p => {
+    const tr = document.createElement('tr');
+    const yrsHtml = Array.from({length:Math.min(p.yrs,5)},(_,i)=>
+      `<div class="year-pip filled"></div>`).join('') +
+      Array.from({length:Math.max(0,5-p.yrs)},()=>
+      `<div class="year-pip"></div>`).join('');
+    tr.innerHTML = `
+      <td class="player-name">${p.name}<span class="player-pos">${p.pos}</span></td>
+      <td class="stat age">${p.age}</td>
+      <td class="stat salary">${p.sal}</td>
+      <td class="stat"><div class="years-dots">${yrsHtml}</div></td>
+      <td class="stat">${p.pts.toFixed(1)}</td>
+      <td class="stat">${p.reb.toFixed(1)}</td>
+      <td class="stat">${p.ast.toFixed(1)}</td>
+      <td class="stat">${p.stl.toFixed(1)}</td>
+      <td class="stat">${p.blk.toFixed(1)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+document.getElementById('prev').addEventListener('click', () => {
+  idx = (idx - 1 + teams.length) % teams.length;
+  render();
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+document.getElementById('next').addEventListener('click', () => {
+  idx = (idx + 1) % teams.length;
+  render();
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft') document.getElementById('prev').click();
+  if (e.key === 'ArrowRight') document.getElementById('next').click();
+});
+
+render();
+</script>
+</body>
+</html>
